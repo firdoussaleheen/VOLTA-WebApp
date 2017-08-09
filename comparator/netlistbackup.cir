@@ -1,0 +1,6 @@
+* Netlist *
+vDC 0 1 20volts
+R1 1 2 8ohms
+L2 2 3 3henries
+C3 3 0 7farads
+.end

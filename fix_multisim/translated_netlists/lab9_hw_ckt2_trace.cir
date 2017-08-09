@@ -1,0 +1,8 @@
+* Translated Netlist *
+v V3 0 3
+v V2 1 0
+r R2 2 Vout1
+r R1 0 2
+v V1 4 0
+u U1 Vout1 2 4 3 1
+.end

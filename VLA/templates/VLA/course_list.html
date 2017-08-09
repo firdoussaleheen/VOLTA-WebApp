@@ -1,0 +1,9 @@
+<ul class="nav nav-list">
+    {% if cour_list %}
+        {% for cour in cour_list %}
+            <li><a href="{% url 'course' cour.url %}">{{ cour.subj }} {{ cour.course_number }} {{ cour.name }}</a></li>
+        {% endfor %}
+    {% else %}
+        <li>No courses at present.</li>
+   {% endif %}
+</ul>

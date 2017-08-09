@@ -1,0 +1,86 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: Profile{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    {% if correct_user %}
+        <h1>Profile</h1>
+        <h2>Login Information</h2>
+        <b>Username:</b> {{ user.username }}<br>
+        <a class="btn" href="{% url 'password_change' %}">Change Password</a><p>
+        
+        {% if user_info %}
+            <h2>Student Information</h2>
+            <b>First Name:</b> {{ user_info.first_name }}<br>
+            <b>Last Name:</b> {{ user_info.last_name }}<br>
+            <b>TUid:</b> {{ user_info.TUid }}<br>
+            <b>Email:</b> {{ user.email }}<p>
+        {% endif %}
+        
+        {% if enrolled_courses %}
+            <h2>Course Progress</h2>
+            {% for course in enrolled_courses %}
+                <table class="table table-striped">
+                    <caption>{{ course }}</caption>
+                    <thead>
+                        <tr>
+                            <th><center>Lab</center></th>
+                            <th><center>Theory</center></th>
+                            <th><center>Theory Test</center></th>
+                            <th><center>Simulation</center></th>
+                            <th><center>Simulation Test</center></th>
+                            <th><center>Hardware</center></th>
+                            <th><center>Results</center></th>
+                            <th><center>Laboratory Test</center></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lab in course.labs %}
+                        <tr>
+                            <td>{{ lab.lab }}</td>
+                            <td><center>{% if lab.theory_finished %}<font color="#009900"> &#x2713; </font>{% else %} <font color="993333"> &#x2717;</font> {% endif %}</center></td>
+                            <td><center>{% if lab.theory_test_finished %}<font color="#009900"> &#x2713; </font>{% else %} <font color="993333"> &#x2717;</font> {% endif %}</center></td>
+                            <td><center>{% if lab.simulation_finished %}<font color="#009900"> &#x2713; </font>{% else %} <font color="993333"> &#x2717;</font> {% endif %}</center></td>
+                            <td><center>{% if lab.sim_test_finished %}<font color="#009900"> &#x2713; </font>{% else %} <font color="993333"> &#x2717;</font> {% endif %}</center></td>
+                            <td><center>{% if lab.hardware_finished %}<font color="#009900"> &#x2713; </font>{% else %} <font color="993333"> &#x2717;</font> {% endif %}</center></td>
+                            <td><center>{% if lab.results_finished %}<font color="#009900"> &#x2713; </font>{% else %} <font color="993333"> &#x2717;</font> {% endif %}</center></td>
+                            <td><center>{% if lab.lab_test_finished %}<font color="#009900"> &#x2713; </font>{% else %} <font color="993333"> &#x2717;</font> {% endif %}</center></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p>
+            {% endfor %}
+            
+            <h2>Test Scores</h2>
+            {% for course in enrolled_courses %}
+                <table class="table table-striped">
+                    <caption>{{ course }}</caption>
+                    <thead>
+                        <tr>
+                            <th><center>Lab</center></th>
+                            <th><center>Theory Test Score</center></th>
+                            <th><center>Laboratory Test Score</center></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lab in course.labs %}
+                        <tr>
+                            <td>{{ lab.lab }}</td>
+                            <td><center>{% if lab.theory_test_finished %} {{ lab.theory_test_score }} {% else %} Not Taken {% endif %} </center></td>
+                            <td><center>{% if lab.lab_test_finished %}  {{ lab.lab_test_score }} {% else %} Not Taken {% endif %} </center></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p>
+            {% endfor %}
+        {% endif %}
+    {% else %}
+        <h2>You do not have permission to view this profile.</h2>
+    {% endif %}
+    
+</div>
+{% endblock %}

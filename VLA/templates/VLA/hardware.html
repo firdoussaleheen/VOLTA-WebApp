@@ -1,0 +1,59 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: {{ lab_name }} Hardware{% endblock %}
+
+{% block sidetitle %}{{ lab_name }} Sections{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_section_list.html' with labs=labs %}{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course.name }}</h1>
+    <h2>Lab {{ lab.lab_number }}: {{ hardware.name }}</h2>
+    <form method="get" action="hardware_help" target="_blank">
+            {% csrf_token %}    
+	    <input class="btn btn-primary" type="submit" name="yes" value="Hardware Help"/> </form>
+
+    {% if hardware_elements %}
+    {% for element in hardware_elements %}
+        {% if element.element_type == 'text' %}
+            <p>{{ element.text_input}}</p>
+        {% elif element.element_type == 'image' %}
+            <p><center><img src="{% static element.image_input %}"></center></p>
+        {% elif element.element_type == 'latex' %}
+            <p><center>$${{ element.equation_input}}$$</center></p>
+        {% elif element.element_type == 'equation' %}
+            <p><center>{{ element.equation_input}}</center></p>
+        {% elif element.element_type == 'table' %}
+            <p><center>THERE WILL BE A TABLE HERE</center></p>
+        {% elif element.element_type == 'caption' %}
+            <p><center><b>{{ element.text_input}}</b></center></p>
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+    <hr>
+    {% if not student_progress.hardware_finished %}
+    <form method="post" action="{% url 'hardware' course.url lab.url hardware.url %}">
+            {% csrf_token %}
+            <h2>Are you finished with the Hardware? <input class="btn btn-primary" type="submit" name="submit" value="Yes"/></h2>
+        </form>
+    {% endif %}
+    <div class="row-fluid">
+        {% if simulationtest %}
+            <div class="span6">
+                <a class="btn" href="{% url 'simulationtest' course.url lab.url simulationtest.url %}">Go to Simulation Test</a>
+            </div>
+        {% endif %}
+        {% if results %}
+            <div class="span6">
+                <ul class="nav pull-right">
+                    <a class="btn" href="{% url 'results' course.url lab.url results.url %}">Go to Hardware Results</a>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

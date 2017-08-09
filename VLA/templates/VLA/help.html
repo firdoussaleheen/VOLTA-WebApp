@@ -1,0 +1,138 @@
+{% extends 'VLA/base.html' %}
+
+{% block title %}VLA: Help{% endblock %}
+
+{% block secondsidetitle %}&nbsp;{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>Get help from VOLTA</h1>
+    <p>Ask questions, get definitions, and watch instructional videos. If you do not find the information you need, please go to the <a href="http://templevla.freeforums.org/" target="new">Forum</a> and post your question.</p>
+</div>
+
+<div class="row-fluid">
+    <div class="span6">
+        <h2>Most Viewed Questions</h2>
+        {% if top_question_list %}
+            <ul>
+                {% for question in top_question_list %}
+                    <li><a href="{% url 'question' question.url %}">{{ question.question }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <ul><li>No questions at present.</li></ul>
+        {% endif %}
+    </div>
+    <!--/span-->
+    <div class="span6">
+        <h2>Most Viewed Definitions</h2>
+        {% if top_def_list %}
+            <ul>
+                {% for definition in top_def_list %}
+                    <li><a href="{% url 'definition' definition.url %}">{{ definition.word }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <ul>No definitions at present.</ul>
+        {% endif %}
+    </div>
+    <!--/span-->
+    
+    
+</div>
+<!--/row-->
+
+<div class="row-fluid">
+    <div class="span6">
+        <h2>Question Categories</h2>
+        {% if question_topics %}
+            <ul>
+                {% for topic in question_topics %}
+                    <li><a href="{% url 'question_topic' topic.url %}">{{ topic.topic }}</a></li>
+                {% endfor %}
+                <li><a href="{% url 'question_topic' 'questionlist' %}">All Questions</a></li>
+            </ul>
+        {% else %}
+            <ul>No questions at present.</ul>
+        {% endif %}
+    </div>
+    <!--/span-->
+    <div class="span6">
+        <h2>Definition Categories</h2>
+        {% if def_topics %}
+            <ul>
+                {% for topic in def_topics %}
+                    <li><a href="{% url 'vocab_topic' topic.url %}">{{ topic.topic }}</a></li>
+                {% endfor %}
+                <li><a href="{% url 'vocab_topic' 'definitionlist' %}">All Definitions</a></li>
+            </ul>
+        {% else %}
+            <ul>No definitions at present.</ul>
+        {% endif %}
+    </div>
+    <!--/span-->    
+</div>
+<!--/row-->
+<div class="row-fluid">
+    <div class="span6">
+        <h2>Recently Added Questions</h2>
+        {% if recent_question_list %}
+            <ul>
+                {% for question in recent_question_list %}
+                    <li><a href="{% url 'question' question.url %}">{{ question.question }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <ul><li>There are no videos present</li></ul>
+        {% endif %}
+    </div>
+    <!--/span-->
+    <div class="span6">
+        <h2>Recently Added Definitions</h2>
+        {% if recent_def_list %}
+            <ul>
+                {% for definition in recent_def_list %}
+                    <li><a href="{% url 'definition' definition.url %}">{{ definition.word }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <ul>No definitions at present.</ul>
+        {% endif %}
+    </div>
+    <!--/span-->
+</div>
+<!--/row-->
+<div class="row-fluid">
+    <div class="span6">
+        <h2>External Help Resources</h2>
+        {% if recent_question_list %}
+            <ul>
+                <li><a href="https://www.khanacademy.org/science/physics/electricity-and-magnetism" target="new">Khan Academy: Electricity and magnetism</a></li>
+                <li><a href="https://www.khanacademy.org/math/linear-algebra" target="new">Khan Academy: Linear Algebra</a></li>
+                <li><a href="https://www.khanacademy.org/math/integral-calculus" target="new">Khan Academy: Integral Calculus</a></li>
+                <li><a href="http://www.ni.com/white-paper/10710/en/" target="new">Multisim Official Tutorial</a></li>
+            </ul>
+        {% else %}
+            <ul><li>There are no videos present</li></ul>
+        {% endif %}
+    </div>
+    <!--/span-->
+    <div class="span6">
+        <h2>Ask a Question</h2>
+        <ul class="nav nav-list">
+            Enter a question and hit the space bar. Do NOT hit Enter. The search may take a moment.<p>
+        <form id="searchForm" >
+            <input  class="search-query span10" type="text" name="question_suggestion2" value="" id="question_suggestion2" placeholder="Enter a question or topic you need help with." >
+        </form>
+    </ul>
+    {% if question_list %}
+        <div id="ques2">
+            {% include 'VLA/question_list.html' with question_list=question_list %}
+        </div>
+        <ul class="nav nav-list">&nbsp;</ul>
+    {% endif %}
+    </div>
+    <!--/span-->
+</div>
+{% endblock %}
+

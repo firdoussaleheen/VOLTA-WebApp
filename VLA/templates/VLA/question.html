@@ -1,0 +1,33 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: Help{% endblock %}
+{% block sidetitle %}Question Categories{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/question_section_list.html' with topics=question_topic_list %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ question_name }}?</h1><P>
+    {% if answer_elements %}
+        {% for element in answer_elements %}
+            {% if element.element_type == 'text' %}
+                <p>{{ element.text_input}}</p>
+            {% elif element.element_type == 'image' %}
+                <p><center><img src="{% static element.image_input %}"></center></p>
+            {% elif element.element_type == 'latex' %}
+                <p><center>$${{ element.equation_input}}$$</center></p>
+            {% elif element.element_type == 'equation' %}
+                <p><center>{{ element.equation_input}}</center></p>
+            {% elif element.element_type == 'video' %}
+                <p><center><iframe width="560" height="315" src="{{ element.video_input }}" frameborder="0" allowfullscreen></iframe></center></p>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        There is no answer for this question.
+    {% endif %}
+    <ul class="nav nav-list"class="nav nav-list">&nbsp;</ul>
+    <a class="btn" href="{% url 'help' %}">Go to Help</a>
+</div>
+{% endblock %}

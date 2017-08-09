@@ -1,0 +1,164 @@
+# Necessary Imports
+# coding=<encoding name>
+from __future__ import division
+import numpy as np
+import os,sys
+
+#!/usr/bin/env python
+# -*- coding: <encoding name> -*-
+
+# Functions
+def read_file(filename):
+    '''
+    Read text file of filename;
+    return lines in file
+    '''
+    try:
+        with open(filename, 'r') as f:
+            return f.read().splitlines()
+    except IOError:
+        print "Error opening or reading file: ", filename
+        pass
+
+		
+
+
+def loopvaluecheck(dict_value_1,dict_value_2,path_1,path_2):
+
+	for key in path_1:
+		for value in dict_value_1[key]:
+			for key in path_2:
+
+				if ( value not in dict_value_2[key]):
+
+					answer= 'not equal'
+					return answer
+					break
+
+				else:
+					answer ='equal'
+
+
+	print answer
+	return answer
+	
+
+
+
+def buildgraph(split_lines): 
+	index_VAC=1
+	index_VDC=1
+	index_C=1
+	index_L=1
+	index_R=1	
+	index_D=1
+	index_S=1
+	dict_value={}
+	dict_node={}
+	for line in split_lines: 
+			splitLine= line.split(' ') 
+			if (splitLine[0][0:3]=='VAC'):
+				dict_value.update({'VAC'+str(index_VAC) : [splitLine[4],splitLine[5]]})
+				dict_node.update({'VAC'+str(index_VAC): [int(splitLine[2]),int(splitLine[1])]})
+				index_VAC +=1
+			if (splitLine[0][0:3]=='VDC'):
+				dict_value.update({'VDC'+str(index_VDC): [splitLine[3]]})
+				dict_node.update({'VDC'+str(index_VDC): [int(splitLine[2]),int(splitLine[1])]})
+				index_VDC +=1	
+			if (splitLine[0][0:1]=='C'):
+				dict_value.update({'C'+str(index_C): [splitLine[3]]})
+				dict_node.update({'C'+str(index_C): [int(splitLine[1]),int(splitLine[2])]})
+				index_C +=1	
+			if (splitLine[0][0:1]=='L'):
+				dict_value.update({'L'+str(index_L): [splitLine[3]]})
+				dict_node.update({'L'+str(index_L): [int(splitLine[1]),int(splitLine[2])]})
+				index_L +=1	
+			if (splitLine[0][0:1]=='R'):
+				dict_value.update({'R'+str(index_R): [splitLine[3]]})
+				dict_node.update({'R'+str(index_R): [int(splitLine[1]),int(splitLine[2])]})
+				index_R +=1	
+			if (splitLine[0][0:1]=='D'):
+				dict_value.update({'D'+str(index_R): 0})
+				dict_node.update({'D'+str(index_D): [int(splitLine[1]),int(splitLine[2])]})	
+				index_D +=1
+			if (splitLine[0][0:1]=='S'):
+				dict_value.update({'S'+str(index_R): 0})
+				dict_node.update({'S'+str(index_D): [int(splitLine[1]),int(splitLine[2])]})	
+				index_S +=1
+
+
+	return [dict_value,dict_node]
+
+def find_all_paths(start_vertex,matrix,dict_node,path):
+
+		numrows=len(matrix)
+		numcols= len(matrix[0])	
+		for columns in range (numcols):
+						if matrix[start_vertex,columns] == -1:
+							path.append(dict_node.keys()[columns])
+							for rows in  range (numrows):
+								if matrix[rows,columns]==1 :
+									end_vertex=rows
+									if end_vertex==0:
+										return path
+									else:
+										return find_all_paths(end_vertex,matrix,dict_node,path)
+									
+
+		
+
+
+def buildmatrix(values,nodes):
+
+		print "max number of node   "
+		number_nodes=int(max(max(nodes.values()))+1)
+
+		print "number of element "
+		print [number_nodes,len(nodes)]
+
+		matrix=np.zeros(((number_nodes),len(nodes)))
+
+		for i in range(0,len(nodes)):
+
+
+			matrix[nodes.values()[i][1],i]=1
+			matrix[nodes.values()[i][0],i]=-1
+		return matrix
+
+# Main function. Performs simple in/out operations
+def main(in_file1='',in_file2=''):
+  # Read in file
+  if not in_file1 or in_file2:
+    try:
+        in_file1 = sys.argv[2]
+	in_file2 = sys.argv[3]
+      # Error handling
+    except:
+        pass
+    # Open & read file
+    split_lines_1 = in_file1.splitlines()
+    print split_lines_1
+    [dict_value_1,dict_node_1]=buildgraph(split_lines_1)
+    a=buildmatrix(dict_value_1,dict_node_1)
+    print a 
+    print dict_value_1
+    print dict_node_1
+    path_1=[]
+    path_1=find_all_paths(0,a,dict_node_1,path_1)
+    print path_1
+
+
+    split_lines_2 = in_file2.splitlines()
+    [dict_value_2,dict_node_2]=buildgraph(split_lines_2)
+    b=buildmatrix(dict_value_2,dict_node_2)
+
+    print dict_value_2
+    print dict_node_2
+    print b
+    path_2=[]
+    path_2=find_all_paths(0,b,dict_node_2,path_2)
+    print path_2
+    return loopvaluecheck(dict_value_1,dict_value_2,path_1,path_2)
+
+if __name__ == '__main__':
+  main()

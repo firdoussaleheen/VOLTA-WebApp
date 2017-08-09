@@ -1,0 +1,10 @@
+<ul class="nav nav-list">
+    {% if topics %}
+        {% for topic in topics %}
+                <li><a href="{% url 'question_topic' topic.url %}">{{ topic.topic }}</a></li>
+        {% endfor %}
+        <li><a href="{% url 'question_topic' 'questionlist' %}">All Questions</a></li>
+    {% else %}
+        <li>There are no questions present.</li>
+   {% endif %}
+</ul>

@@ -1,0 +1,15 @@
+<ol class="nav nav-list">
+    {% if prereq %}
+        <li><a href="{% url 'prereq' course_name_url prereq_name_url %}">0: Prequisites</a></li>
+    {% endif %}
+    {% if labs %}
+        {% for lab in labs %}
+            <li><a href="{% url 'lab' course_name_url lab.url %}">{{ forloop.counter }}: {{ lab.name }}</a></li>
+        {% endfor %}
+    {% else %}
+        <li>No laboratories at present.</li>
+    {% endif %}
+</ol>
+
+<ul class="nav nav-list">&nbsp;</ul>
+    <a href="/VLA/">Return to Course list</a>

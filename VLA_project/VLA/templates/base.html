@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+{% load static %}
+{% autoescape off %}
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="{% static 'css/bootstrap-fluid-adj.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
+    <link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
+
+    <title>{% block title %}Virtual Lab Assistant{% endblock %}</title>
+</head>
+
+    <body>
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    
+         
+                    <div class="nav-collapse collapse">
+                        <ul class="nav pull-right">
+                            
+                            {% if user.is_authenticated %}
+                             <li><a href="{% url 'profile' user.username %}">Welcome, {{ user.username }}! &nbsp;</a></li>
+                             <li><a href="{% url 'logout' %}">Logout</a></li>
+                            {% else %}
+                             <li><a href="{% url 'register' %}">Register</a></li>
+                             <li><a href="{% url 'login' %}">Login</a></li>
+                            {% endif %}
+                        </ul>
+                        <ul class="nav">
+                            <li><a class="brand" href="{% url 'index' %}">VLA</a></li>
+                            <li><a href="{% url 'about' %}">About</a></li>
+                            <li><a href="{% url 'help' %}">Help</a></li>
+                            <li><a href="{% url 'help' %}" target="new">Forum</a></li>
+                            <li><a href="https://www.youtube.com/channel/UCNU5MvpuVNIAe2NvCiweCNw/" target="new">YouTube</a></li>
+                        </ul>
+                    </div>
+                    <!--/.nav-collapse -->
+                </div>
+            </div>
+         </div>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span3">
+                    {% block sidebar_block %}
+                    <div class="well sidebar-nav">
+                        
+                        <div id="cours">
+                            {% if user.is_authenticated %}
+                                <ul class="nav nav-list"><li>{% block sidetitle %}Course List{% endblock %}</li>
+                                    {% block sidebar %}
+                                        {% if cour_list %}
+                                            {% include 'VLA/course_list.html' with cour_list=cour_list %}
+                                        {% endif %}
+                                    {% endblock %}
+                                </ul>
+                                <ul class="nav nav-list">&nbsp;</ul>
+                                <ul class="nav nav-list">
+                                    <li class="nav-header">Ask a Question</li>
+                                    <form>
+                                        <li><input  class="search-query span10" type="text" name="question_suggestion" value="" id="question_suggestion" /></li>
+                                    </form>
+                                </ul>
+                                {% if question_list %}
+                                    <div id="ques">
+                                        {% include 'VLA/question_list.html' with question_list=question_list %}
+                                    </div>
+                                    <ul class="nav nav-list">&nbsp;</ul>
+                                {% endif %}
+                                
+                                <ul class="nav nav-list">
+                                    <li class="nav-header">Get a Definition</li>
+                                    <form>
+                                        <li><input  class="search-query span10" type="text" name="definition_suggestion" value="" id="definition_suggestion" /></li>
+                                    </form>
+                                </ul>
+                                {% if def_list %}
+                                    <div id="defs">
+                                        {% include 'VLA/definition_list.html' with def_list=def_list %}
+                                    </div>
+                                {% endif %}
+                                {% block return %}{% endblock %}
+                            {% endif %}
+                        </div>
+                        
+                    </div>
+                    <!--/.well -->
+                    {% endblock %}
+                </div>
+                <!--/span-->
+                <div class="span9">
+                    {% block body_block %}
+                    {% endblock %}
+                </div>
+                <!--/span-->
+            </div>
+            <!--/row-->
+        </div>
+        <!--/.fluid-container-->
+        
+        <hr>
+        <footer>
+            <div class="container">
+                <a href="http://www.temple.edu" target="new"><img src="{% static 'VLA/images/temple_logo.jpg' %}"></a>
+                
+                <ul class="nav pull-right">
+                    <a href="http://www.temple.edu/csnap/" target="new"><img src="{% static 'VLA/images/csnap_logo.jpg' %}"></a>
+                </ul>
+            </div>
+        </footer>
+    
+    <script src="{% static 'js/jquery-2.1.1.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/jquery-2.1.1.js' %}"></script>
+    <script src="{% static 'js/VLA-ajax.js' %}"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </body>
+</html>
+{% endautoescape %}

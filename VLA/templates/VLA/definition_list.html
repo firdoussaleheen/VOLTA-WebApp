@@ -1,0 +1,11 @@
+<ul class="nav nav-list">
+    {% if def_list %}
+        {% if def_searched %}
+            {% for definition in def_list %}
+                <li><a href="{% url 'definition' definition.url %}">{{ definition.word }}</a></li>
+            {% endfor %}
+        {% endif %}
+    {% else %}
+        <li>No definitions at present.</li>
+   {% endif %}
+</ul>

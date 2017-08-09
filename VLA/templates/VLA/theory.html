@@ -1,0 +1,54 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: {{ lab_name }} Theory{% endblock %}
+
+{% block sidetitle %}{{ lab_name }} Sections{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_section_list.html' with labs=labs %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course.name }}</h1>
+    <h2>Lab {{ lab.lab_number }}: {{ theory.name }}</h2>
+    {% if theory_elements %}
+    {% for element in theory_elements %}
+        {% if element.element_type == 'text' %}
+            <p>{{ element.text_input}}</p>
+        {% elif element.element_type == 'image' %}
+            <p><center><img src="{% static element.image_input %}"></center></p>
+        {% elif element.element_type == 'latex' %}
+            <p><center>$${{ element.equation_input}}$$</center></p>
+        {% elif element.element_type == 'equation' %}
+            <p><center>{{ element.equation_input}}</center></p>
+        {% elif element.element_type == 'table' %}
+            <p><center>THERE WILL BE A TABLE HERE</center></p>
+        {% elif element.element_type == 'caption' %}
+            <p><center><b>{{ element.text_input}}</b></center></p>
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+    <hr>
+    {% if not student_progress.theory_finished %}
+        <form method="post" action="{% url 'theory' course.url lab.url theory.url %}">
+            {% csrf_token %}
+            <h2>Are you finished with the Theory? <input class="btn btn-primary" type="submit" name="submit" value="Yes"/></h2>
+        </form>
+    {% endif %}
+    <div class="row-fluid">
+        <div class="span6">
+            <a class="btn" href="{% url 'lab' course.url lab.url %}">Go to Lab Overview</a>
+        </div>
+        {% if theorytest %}
+            <div class="span6">
+                <ul class="nav pull-right">
+                    <a class="btn" href="{% url 'theorytest' course.url lab.url theorytest.url %}">Go to Theory Test</a>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

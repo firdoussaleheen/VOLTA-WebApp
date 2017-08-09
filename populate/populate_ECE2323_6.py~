@@ -1,0 +1,561 @@
+import os
+from django.utils import timezone
+
+'''
+Script to populate VLA with:
+
+COURSE:
+-EE Science II Course
+
+LABORATORIES:
+
+'''
+
+    ###
+    # EE Science II Lab 6: Design of a Second Order Circuit based on Step Response
+    ###
+def populate(ee_science_ii):
+    design_second_order_filters = add_lab(course=ee_science_ii, name="Design of a Second Order Circuit based on Step Response",
+                                  start_date=timezone.now(), due_date=timezone.now(),
+                                  lab_number=6)
+    add_lab_objective(lab=design_second_order_filters,
+                      objective="The purpose of this week's lab is to design a second order circuit for a given step response. "+
+                      "This lab includes a pre-lab.")
+
+
+    # Design of a Second Order Circuit based on Step Response Theory 
+    dsof_theory = add_theory(lab=design_second_order_filters, name="Design of a Second Order Circuit based on Step Response Theory")
+    
+    add_theory_element(theory=dsof_theory, name="dsof theory 1", number=1,
+                       text_input="",
+                       image_input="VLA/courses/EE_Science_II/Lab06/fig01.jpg", equation_input="", video_input="", element_type='image')
+
+    add_theory_element(theory=dsof_theory, name="dsof theory 2", number=2,
+                       text_input="Figure 1: A series RLC Circuit",
+                       image_input=None, equation_input="", video_input="", element_type='caption')
+
+    add_theory_element(theory=dsof_theory, name="dsof theory 3", number=3,
+                       text_input="This week's lab involves designing an RLC circuit based on a given step response. "+
+                       "With a series RLC circuit example, we shall show the steps to derive the characteristic equation, "+
+                       "damping ratio, and undamped natural frequency of a second order circuit. Consider the series RLC circuit in Fig. 1.",
+                       image_input=None, equation_input="", video_input="", element_type='text')
+        
+
+    add_theory_element(theory=dsof_theory, name="dsof theory 4", number=4,
+                       text_input="Step 1: Obtain a second order differential equation that describes the circuit. For example, the circuit in Fig. 1 can be described by: "+
+                       "\(\\frac{{{d}^{2}}{{v}_{c}}(t)}{d{{t}^{2}}}+\\frac{R}{L}\\frac{d{{v}_{c}}(t)}{dt}+\\frac{1}{LC}{{v}_{c}}(t)=\\frac{1}{LC}{{v}_{s}}(t)\).",
+                       image_input=None, equation_input="", video_input="", element_type='text')
+
+  
+    add_theory_element(theory=dsof_theory,name="dsof theory 5", number=5,
+                      text_input="Step 2: Derive the characteristic equation from the above differential equation, which can be written in the form of: "+
+                      "\({{s}^{2}}+2\\alpha s+{{\\omega }_{0}}^{2}=0\)",
+                      image_input='', equation_input="", video_input="", 
+                      element_type='text')
+
+    add_theory_element(theory=dsof_theory, name="dsof theory 6", number=6,
+                      text_input="where attenuation \(\\alpha\), is related with the damping ratio (\(\\zeta\)) and undamped natural angular frequency by (\(\\omega_{0}\)) "+
+                      "by \(\\alpha=\\zeta\\omega_{0}\). "+
+                      "For example, for our series RLC circuit, the characteristic equation can be written as: "+
+                      "\({{s}^{2}}+\\frac{R}{L}s+\\frac{1}{LC}=0\)",
+                      image_input=None, equation_input="", video_input="", 
+                      element_type='text')
+
+
+    add_theory_element(theory=dsof_theory, name="dsof theory 7", number=7,
+                      text_input="By comparing the coefficients of the characteristic equation for the circuit with the general form, we obtain  the damping ratio and "+
+                      "undamped natural angular  frequency can be found as \(\\zeta =\\frac{R}{2}\\sqrt{\\frac{C}{L}}\) "+
+                      "\({{\\omega }_{0}}=\\frac{1}{\\sqrt{LC}}\). Depending on the value of the damping ratio, there can be three "+
+                      "types of responses: Critically damped response (\(\\alpha=\\omega_{0}\) or, \(\\zeta=1\)), underdamped "+
+                      "response (\(\\alpha<\\omega_{0}\) or \(\\zeta<1\)), and overdamped response (\(\\alpha>\\omega_{0}\) or \(\\zeta>1\)).",
+                      image_input=None, equation_input="", video_input="", 
+                      element_type='text')
+
+    add_theory_element(theory=dsof_theory, name="dsof theory 8", number=8,
+                      text_input="This review includes the example of a series RLC circuit. In the lab, you will work "+
+                      "with a parallel RLC circuit with similar procedure. "+
+                      "This review will help you in performing Pre-Lab and test.",
+                      image_input=None, equation_input="", video_input="", 
+                      element_type='text')
+
+    add_theory_element(theory=dsof_theory, name="dsof theory 9", number=9,
+                       text_input="",
+                       image_input="VLA/courses/EE_Science_II/Lab06/fig02.jpg", equation_input="", video_input="", element_type='image')
+
+    add_theory_element(theory=dsof_theory, name="dsof theory 10", number=10,
+                       text_input="Figure 2: Underdamped, critically damped, and overdamped step responses",
+                       image_input=None, equation_input="", video_input="", element_type='caption')
+
+
+    # Design of a Second Order Circuit based on Step Response theory test
+    dsof_theory_test = add_theory_test(lab=design_second_order_filters, name="Design of a Second Order Circuit based on Step Response Theory Test")
+
+                        
+    add_theory_test_element(theorytest=dsof_theory_test, name="dsof theory test element 1", number=1,
+                      text_input="",
+                      image_input='VLA/courses/EE_Science_II/Lab06/fig03.jpg', equation_input="", video_input="",
+                      element_type='image')
+
+    add_theory_test_element(theorytest=dsof_theory_test, name="dsof theory test element 2", number=2,
+                      text_input="Figure I",
+                      image_input=None, equation_input="", video_input="", 
+                      element_type='caption')
+
+ 
+    add_theory_test_element(theorytest=dsof_theory_test, name="dsof theory test element 3", number=3,
+                      text_input="Note: Figure numbers are specific to this test.",
+                      image_input=None, equation_input="", video_input="", 
+                      element_type='text')
+
+    add_theory_test_question(theorytest=dsof_theory_test,
+                             question="Consider the circuit in Fig. I. Given, R=1M\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What is the characteristic equation of this circuit?",
+                             answer_one="\(s^2+100s+10^9=0\)", answer_two="\(s^2+s+10^9=0\)",
+                             answer_three="\(s^2+100s+10^{-9}=0\)", answer_four="\(s^2+s+10=0\)",
+                             correct_answer_number=2,
+                             correct_response="",
+                             incorrect_response="")
+
+    add_theory_test_question(theorytest=dsof_theory_test,
+                             question="Consider the circuit in Fig. I. Given, R=1M\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What would be the step response?",
+                             answer_one="overdamped", answer_two="underdamped",
+                             answer_three="critically damped", answer_four="superficially damped",
+                             correct_answer_number=2,
+                             correct_response="",
+                             incorrect_response="")
+
+
+    add_theory_test_question(theorytest=dsof_theory_test,
+                             question="Consider the circuit in Fig. I. Given, R=1M\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What is the undamped natural angular frequency \(\\omega_{0}\) in rad/s?",
+                             answer_one="30000", answer_two="31000",
+                             answer_three="31622", answer_four="1000000",
+                             correct_answer_number=3,
+                             correct_response="",
+                             incorrect_response="")
+
+    add_theory_test_question(theorytest=dsof_theory_test,
+                             question="Consider the circuit in Fig. I. Given, R=1M\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What is the value of attenuation \(\\alpha\)?",
+                             answer_one="1", answer_two="0.25",
+                             answer_three="0.5", answer_four="2",
+                             correct_answer_number=3,
+                             correct_response="",
+                             incorrect_response="")
+
+    add_theory_test_question(theorytest=dsof_theory_test,
+                             question="Consider the circuit in Fig. I. Given, R=1k\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What should be the value of the capacitor to generate a critically damped response?",
+                             answer_one="0.25 kF", answer_two="0.5 mF",
+                             answer_three="0.25 nF", answer_four="0.5 nF",
+                             correct_answer_number=3,
+                             correct_response="",
+                             incorrect_response="")
+
+
+    # Design of a Second Order Circuit based on Step Response Simulation
+    dsof_simulation = add_simulation(lab=design_second_order_filters, name="Design of a Second Order Circuit based on Step Response Simulation")
+    
+    add_simulation_element(simulation=dsof_simulation,
+                           name="dsof simulation 1", number=1,
+                           text_input="(use circuit comparator)Consider the circuit in Fig. 3. For this circuit, determine the characteristic equation of this circuit "+
+                           "and bring it with you in the lab."+"Go through these URLs: <a href=\"https://www.youtube.com/watch?v=vPKkrWl_3Vc\">Introduction to RLC circuit differential equation</a>",
+                           image_input=None, equation_input="", video_input="", 
+                           element_type='text')
+
+    add_simulation_element(simulation=dsof_simulation,
+                           name="dsof simulation 2", number=2,
+                           text_input="",
+                           image_input='VLA/courses/EE_Science_II/Lab06/fig03.jpg', equation_input="", video_input="", 
+                           element_type='image')
+    
+    add_simulation_element(simulation=dsof_simulation,
+                           name="dsof simulation 3", number=3,
+                           text_input="Figure 3",
+                           image_input=None, equation_input="", video_input="", 
+                           element_type='caption')
+
+                     
+
+    # Design of a Second Order Circuit based on Step Response Hardware
+    dsof_hardware = add_hardware(lab=design_second_order_filters, name="Design of a Second Order Circuit based on Step Response Hardware")
+
+    add_hardware_element(hardware=dsof_hardware, name="dsof board hardware 1", number=1,
+                         text_input="<h4>Part 1. Circuit 1</h4>",
+                         image_input=None, equation_input="", video_input="", 
+                         element_type='text')
+
+    add_hardware_element(hardware=dsof_hardware, name="dsof board hardware 2", number=2,
+                         text_input="For the circuit in Prelab (see Fig. 4), select values of R1, L1, and C1 that gives you the step response shown in Fig. 5. "+
+                         "First simulate the circuit with your selected values. Then implement the circuit in EE board. Compare your simulated step "+
+                         "response to hardware step response. Show that you have successfully recreated this step response:",
+                         image_input=None, equation_input="", video_input="", 
+                         element_type='text')
+
+    add_hardware_element(hardware=dsof_hardware,
+                           name="dsof hardware 2", number=2,
+                           text_input="",
+                           image_input='VLA/courses/EE_Science_II/Lab06/fig03.jpg', equation_input="", video_input="", 
+                           element_type='image')
+    
+    add_hardware_element(hardware=dsof_hardware,
+                           name="dsof hardware 3", number=3,
+                           text_input="Figure 4",
+                           image_input=None, equation_input="", video_input="", 
+                           element_type='caption')
+
+    add_hardware_element(hardware=dsof_hardware, name="dsof board hardware 4", number=4,
+                         text_input="",
+                         image_input='VLA/courses/EE_Science_II/Lab06/fig04.jpg', equation_input="", video_input="", 
+                         element_type='image')
+
+    add_hardware_element(hardware=dsof_hardware, name="dsof board hardware 5", number=5,
+                         text_input="Figure 5: Overdamped Response of an RLC circuit",
+                         image_input=None, equation_input="", video_input="", 
+                         element_type='caption')
+
+
+    add_hardware_element(hardware=dsof_hardware, name="dsof board hardware 6", number=6,
+                         text_input="<h4>Part 2. Circuit 2</h4>",
+                         image_input=None, equation_input="", video_input="", 
+                         element_type='text')
+
+    add_hardware_element(hardware=dsof_hardware, name="dsof board hardware 7", number=7,
+                         text_input="For the circuit in Prelab (see Fig. 4), select values of R1, L1, and C1 that gives you the step response shown in Fig. 6. "+
+                         "First simulate the circuit with your selected values. Then implement the circuit in EE board. Compare your simulated step "+
+                         "response to hardware step response. Show that you have successfully recreated this step response:",
+                         image_input=None, equation_input="", video_input="", 
+                         element_type='text')
+
+    
+    add_hardware_element(hardware=dsof_hardware, name="dsof board hardware 8", number=8,
+                         text_input="",
+                         image_input='VLA/courses/EE_Science_II/Lab06/fig05.jpg', equation_input="", video_input="", 
+                         element_type='image')
+
+    add_hardware_element(hardware=dsof_hardware, name="dsof board hardware 9", number=9,
+                         text_input="Figure 6: Underdamped Response of an RLC circuit",
+                         image_input=None, equation_input="", video_input="", 
+                         element_type='caption')
+
+   
+
+    # Design of a Second Order Circuit based on Step Response Results
+    dsof_results = add_results(lab=design_second_order_filters, name="Design of a Second Order Circuit based on Step Response Results")
+
+    add_results_questions(results=dsof_results,
+                          question="Write a standard report as specified in the syllabus. "+
+                          "Explain your work with the detailed calculations, observations, and analysis. In your report, you must include the answers to the questions.",
+                          answer_text="",
+                          answer_type='text')
+
+    add_results_questions(results=dsof_results,
+                          question="Show the derivation of the characteristic equation of the given circuit.",
+                          answer_text="",
+                          answer_type='text')
+
+    add_results_questions(results=dsof_results,
+                          question="Determine the expression for the damping ratio.",
+                          answer_text="",
+                          answer_type='text')
+
+    add_results_questions(results=dsof_results,
+                          question="Determine the expression for the undamped natural angular frequency.",
+                          answer_text="",
+                          answer_type='text')
+
+    add_results_questions(results=dsof_results,
+                          question="Mention your design value of R1, L1, C1 for circuit 1. Compare the simulated and hardware step response.",
+                          answer_text="",
+                          answer_type='text')
+
+    add_results_questions(results=dsof_results,
+                          question="Mention your design value of R1, L1, C1 for circuit 2. Compare the simulated and hardware step response.",
+                          answer_text="",
+                          answer_type='text')
+     
+    add_results_questions(results=dsof_results,
+                          question="Submit the report to our blackboard before the next lab (see syllabus for submission guideline).",
+                          answer_text="",
+                          answer_type='text')
+
+    # Design of a Second Order Circuit based on Step Response lab test
+    dsof_lab_test = add_lab_test(lab=design_second_order_filters, name="Design of a Second Order Circuit based on Step Response lab test")
+
+                        
+    add_lab_test_element(labtest=dsof_lab_test, name="dsof lab test element 1", number=1,
+                      text_input="",
+                      image_input='VLA/courses/EE_Science_II/Lab06/fig03.jpg', equation_input="", video_input="",
+                      element_type='image')
+
+    add_lab_test_element(labtest=dsof_lab_test, name="dsof lab test element 2", number=2,
+                      text_input="Figure I",
+                      image_input=None, equation_input="", video_input="", 
+                      element_type='caption')
+
+ 
+    add_lab_test_element(labtest=dsof_lab_test, name="dsof lab test element 3", number=3,
+                      text_input="Note: Figure numbers are specific to this test.",
+                      image_input=None, equation_input="", video_input="", 
+                      element_type='text')
+
+    add_lab_test_question(labtest=dsof_lab_test,
+                             question="Consider the circuit in Fig. I. Given, R=1M\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What is the characteristic equation of this circuit?",
+                             answer_one="\(s^2+s+10^9=0\)", answer_two="\(s^2+100s+10^9=0\)",
+                             answer_three="\(s^2+100s+10^{-9}=0\)", answer_four="\(s^2+s+10=0\)",
+                             correct_answer_number=1,
+                             correct_response="",
+                             incorrect_response="")
+
+    add_lab_test_question(labtest=dsof_lab_test,
+                             question="Consider the circuit in Fig. I. Given, R=1M\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What would be the step response?",
+                             answer_one="underdamped", answer_two="overdamped",
+                             answer_three="critically damped", answer_four="superficially damped",
+                             correct_answer_number=1,
+                             correct_response="",
+                             incorrect_response="")
+
+
+    add_lab_test_question(labtest=dsof_lab_test,
+                             question="Consider the circuit in Fig. I. Given, R=1M\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What is the undamped natural angular frequency \(\\omega_{0}\) in rad/s?",
+                             answer_one="30000", answer_two="31622",
+                             answer_three="31000", answer_four="1000000",
+                             correct_answer_number=2,
+                             correct_response="",
+                             incorrect_response="")
+
+    add_lab_test_question(labtest=dsof_lab_test,
+                             question="Consider the circuit in Fig. I. Given, R=1M\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What is the value of attenuation \(\\alpha\)?",
+                             answer_one="1", answer_two="0.25",
+                             answer_three="0.5", answer_four="2",
+                             correct_answer_number=3,
+                             correct_response="",
+                             incorrect_response="")
+
+    add_lab_test_question(labtest=dsof_lab_test,
+                             question="Consider the circuit in Fig. I. Given, R=1k\(\\Omega\) , C=1\(\\mu\)F, and L=1mH. "+
+                             "What should be the value of the capacitor to generate a critically damped response?",
+                             answer_one="0.25 kF", answer_two="0.25 nF",
+                             answer_three="0.5 mF", answer_four="0.5 nF",
+                             correct_answer_number=2,
+                             correct_response="",
+                             incorrect_response="")
+
+
+    # Print out what we have added to the user.
+    #for c in Course.objects.all():
+    #    for l in Laboratory.objects.filter(course=c):
+    #        print "- {0} - {1}".format(str(c), str(l))
+            
+
+    # Add labpermissions for new lab for each user 
+    for u in User.objects.all():
+        add_new_lab_permission(user=u, lab=design_second_order_filters)
+    
+def add_lab(course, name, start_date, due_date, lab_number):
+    l = Laboratory.objects.get_or_create(course=course, name=name,
+                                         start_date=start_date,
+                                         due_date=due_date,
+                                         lab_number=lab_number)[0]
+    return l
+
+def add_lab_objective(lab, objective):
+    lo = LabObjective.objects.get_or_create(lab=lab, objective=objective)[0]
+    return lo
+
+def add_lab_equipment(lab, equipment):
+    le = LabEquipment.objects.get_or_create(lab=lab, equipment=equipment)[0]
+    return le
+
+def add_theory(lab, name):
+    t = Theory.objects.get_or_create(lab=lab, name=name)[0]
+    return t
+
+def add_theory_element(theory, name, number, text_input, image_input,
+                       equation_input, element_type, video_input):
+    te = TheoryElement.objects.get_or_create(theory=theory, name=name,
+                                             number=number,
+                                             text_input=text_input,
+                                             image_input=image_input,
+                                             equation_input=equation_input,
+                                             element_type=element_type,
+                                             video_input=video_input)[0]
+    return te
+
+def add_theory_test(lab, name):
+    tt = TheoryTest.objects.get_or_create(lab=lab, name=name)[0]
+    return tt
+
+def add_theory_test_element(theorytest, name, number, text_input, image_input,
+                         equation_input, element_type, video_input):
+    tte = TheoryTestElement.objects.get_or_create(theorytest=theorytest, name=name,
+                                               number=number,
+                                               text_input=text_input,
+                                               image_input=image_input,
+                                               equation_input=equation_input,
+                                               element_type=element_type,
+                                               video_input=video_input)[0]
+    return tte
+
+def add_theory_test_question(theorytest, question, answer_one, answer_two,
+                             answer_three, answer_four, correct_answer_number,
+                             correct_response, incorrect_response):
+    ttq = TheoryTestQuestion.objects.get_or_create(theorytest=theorytest,
+                                                   question=question,
+                                                   answer_one=answer_one,
+                                                   answer_two=answer_two,
+                                                   answer_three=answer_three,
+                                                   answer_four=answer_four,
+                                                   correct_answer_number=correct_answer_number,
+                                                   correct_response= correct_response,
+                                                   incorrect_response=incorrect_response)[0]
+    return ttq
+
+def add_simulation(lab, name):
+    s = Simulation.objects.get_or_create(lab=lab, name=name)[0]
+    return s
+
+def add_simulation_element(simulation, name, number, text_input, image_input,
+                           equation_input, element_type, video_input):
+    se = SimulationElement.objects.get_or_create(simulation=simulation,
+                                                 name=name, number=number,
+                                                 text_input=text_input,
+                                                 image_input=image_input,
+                                                 equation_input=equation_input,
+                                                 element_type=element_type,
+                                                 video_input=video_input)[0]
+    return se
+
+def add_simulation_test(lab, name):
+    st = SimulationTest.objects.get_or_create(lab=lab, name=name)[0]
+    return st
+
+def add_sim_test_element(simulationtest, name, number, text_input, image_input,
+                         equation_input, element_type, video_input):
+    ste = SimulationTestElement.objects.get_or_create(simulationtest=simulationtest, name=name,
+                                               number=number,
+                                               text_input=text_input,
+                                               image_input=image_input,
+                                               equation_input=equation_input,
+                                               element_type=element_type,
+                                               video_input=video_input)[0]
+    return ste
+
+def add_simulation_test_question(simulationtest, question, answer_one,
+                                 answer_two, answer_three, answer_four,
+                                 correct_answer_number, correct_response,
+                                 incorrect_response):
+    stq = SimulationTestQuestion.objects.get_or_create(simulationtest=simulationtest,
+                                                       question=question,
+                                                       answer_one=answer_one,
+                                                       answer_two=answer_two,
+                                                       answer_three=answer_three,
+                                                       answer_four=answer_four,
+                                                       correct_answer_number=correct_answer_number,
+                                                       correct_response= correct_response,
+                                                       incorrect_response=incorrect_response)[0]
+    return stq
+
+def add_hardware(lab, name):
+    h = Hardware.objects.get_or_create(lab=lab, name=name)[0]
+    return h
+
+def add_hardware_element(hardware, name, number, text_input, image_input,
+                         equation_input, element_type, video_input):
+    he = HardwareElement.objects.get_or_create(hardware=hardware, name=name,
+                                               number=number,
+                                               text_input=text_input,
+                                               image_input=image_input,
+                                               equation_input=equation_input,
+                                               element_type=element_type,
+                                               video_input=video_input)[0]
+    return he
+
+def add_results(lab, name):
+    r = Results.objects.get_or_create(lab=lab, name=name)[0]
+    return r
+
+def add_results_questions(results, question, answer_text, answer_type):
+    rq = ResultsQuestions.objects.get_or_create(results=results, question=question,
+                                                answer_text=answer_text,
+                                                answer_type=answer_type)[0]
+    return rq
+
+def add_lab_test(lab, name):
+    lt = LabTest.objects.get_or_create(lab=lab, name=name)[0]
+    return lt
+
+def add_lab_test_element(labtest, name, number, text_input, image_input,
+                         equation_input, element_type, video_input):
+    lte = LabTestElement.objects.get_or_create(labtest=labtest, name=name,
+                                               number=number,
+                                               text_input=text_input,
+                                               image_input=image_input,
+                                               equation_input=equation_input,
+                                               element_type=element_type,
+                                               video_input=video_input)[0]
+    return lte
+
+def add_lab_test_question(labtest, question, answer_one,
+                                 answer_two, answer_three, answer_four,
+                                 correct_answer_number, correct_response,
+                                 incorrect_response):
+    ltq = LabTestQuestion.objects.get_or_create(labtest=labtest,
+                                                       question=question,
+                                                       answer_one=answer_one,
+                                                       answer_two=answer_two,
+                                                       answer_three=answer_three,
+                                                       answer_four=answer_four,
+                                                       correct_answer_number=correct_answer_number,
+                                                       correct_response= correct_response,
+                                                       incorrect_response=incorrect_response)[0]
+    return ltq
+
+def add_course_permission(user, course):
+    cp = CoursePermission.objects.get_or_create(user=user, course=course,
+                                           course_finished=False)[0]
+    return cp
+
+def add_lab_progress(user, lab):
+    lp = LabProgress.objects.get_or_create(user=user, lab=lab,
+                                           theory_finished=False,
+                                           theory_test_finished=False,
+                                           simulation_finished=False,
+                                           sim_test_finished=False,
+                                           hardware_finished=False,
+                                           results_finished=False,
+                                           lab_test_finished=False,
+                                           lab_finished=False,
+                                           theory_test_score=0,
+                                           lab_test_score=0)[0]
+    return lp
+
+def add_sim_question_response(labprogress, question_number):
+    sqr = SimulationQuestionResponse.objects.get_or_create(labprogress=labprogress, question_number=question_number)
+    
+    return sqr
+
+def add_new_lab_permission(user, lab):
+    labprogress = add_lab_progress(user, lab)
+    simulationtest = SimulationTest.objects.filter(lab=lab)
+    test_questions = SimulationTestQuestion.objects.filter(simulationtest=simulationtest)
+    question_number = 0
+    for question in test_questions:
+        question_number = question_number + 1
+        add_sim_question_response(labprogress, question_number)
+
+# Start execution here!
+if __name__ == '__main__':
+    print "Starting VLA population script..."
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'VLA_project.settings')
+    from VLA.models import *
+    from student.models import LabProgress, User, SimulationQuestionResponse
+    
+    ee_science = Course.objects.filter(name = 'EE Science II')
+    for course in ee_science:
+        populate(ee_science_ii=course)

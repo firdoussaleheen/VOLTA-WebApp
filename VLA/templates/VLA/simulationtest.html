@@ -1,0 +1,170 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: {{ lab_name }} Simulation Test{% endblock %}
+
+{% block sidetitle %}{{ lab_name }} Sections{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_section_list.html' with labs=labs %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course.name }}</h1>
+    <h2>Lab {{ lab.lab_number }}: {{ simulationtest.name }}</h2>
+    {% if not questions_filled %}<h3>You must answer all questions!</h3>{% endif %}
+    
+    {% if simulationtest_elements %}
+        {% for element in simulationtest_elements %}
+            {% if element.element_type == 'text' %}
+            <p>{{ element.text_input}}</p>
+            {% elif element.element_type == 'image' %}
+                <p><center><img src="{% static element.image_input %}"></center></p>
+            {% elif element.element_type == 'latex' %}
+                <p><center>$${{ element.equation_input}}$$</center></p>
+            {% elif element.element_type == 'equation' %}
+                <p><center>{{ element.equation_input}}</center></p>
+            {% elif element.element_type == 'table' %}
+                <p><center>THERE WILL BE A TABLE HERE</center></p>
+            {% elif element.element_type == 'caption' %}
+                <p><center><b>{{ element.text_input}}</b></center></p>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    
+    {% if student_progress.sim_test_finished %}
+        {% if simulationtest_questions %}
+            <ol>
+            {% for question in simulationtest_questions %}
+                <li>{{ question.question }}</li>
+                {% if question.answer_one %}
+                    {%  if question.correct_answer_number == 1  %}
+                        <font color="#009900"> &#x2713; </font>{{ question.answer_one }}
+                    {% else %}
+                        &#8226; {{ question.answer_one }}
+                    {% endif %} <br />
+                {% endif %}
+                {% if question.answer_two %}
+                    {%  if question.correct_answer_number == 2 %}
+                        <font color="#009900"> &#x2713; </font>{{ question.answer_two }}
+                    {% else %}
+                        &#8226; {{ question.answer_two }}
+                    {% endif %} <br />
+                {% endif %}
+                {% if question.answer_three %}
+                    {%  if question.correct_answer_number == 3 %}
+                        <font color="#009900"> &#x2713; </font>{{ question.answer_three }}
+                    {% else %}
+                        &#8226; {{ question.answer_three }}
+                    {% endif %} <br />
+                {% endif %}
+                {% if question.answer_four %}
+                    {%  if question.correct_answer_number == 4 %}
+                        <font color="#009900"> &#x2713; </font>{{ question.answer_four }}
+                    {% else %}
+                        &#8226; {{ question.answer_four }}
+                    {% endif %} <br />
+                {% endif %}
+                {% if question.correct_response %}
+                        <h3>Correct: {{ question.correct_response }}</h3>
+                {% endif %}
+            {% endfor %}
+            </ol>
+        {% endif %}
+    {% else %}
+        {% if simulationtest_questions %}
+            <form method="post" action="{% url 'simulationtest' course.url lab.url simulationtest.url %}">
+            <ol>
+                {% for question in simulationtest_questions %}
+                    <li>{{ question.question }}</li>
+                    
+                    {% csrf_token %}
+                    {% if question.given_answer.student_response %}
+                        {% if question.given_answer.student_response == question.correct_answer_number %}
+                            {% if question.answer_one %}
+                                {%  if question.correct_answer_number == 1  %}
+                                    <font color="#009900"> &#x2713; </font>{{ question.answer_one }}
+                                {% else %}
+                                    &#8226; {{ question.answer_one }}
+                                {% endif %} <br />
+                            {% endif %}
+                            {% if question.answer_two %}
+                                {%  if question.correct_answer_number == 2 %}
+                                    <font color="#009900"> &#x2713; </font>{{ question.answer_two }}
+                                {% else %}
+                                    &#8226; {{ question.answer_two }}
+                                {% endif %} <br />
+                            {% endif %}
+                            {% if question.answer_three %}
+                                {%  if question.correct_answer_number == 3 %}
+                                    <font color="#009900"> &#x2713; </font>{{ question.answer_three }}
+                                {% else %}
+                                    &#8226; {{ question.answer_three }}
+                                {% endif %} <br />
+                            {% endif %}
+                            {% if question.answer_four %}
+                                {%  if question.correct_answer_number == 4 %}
+                                    <font color="#009900"> &#x2713; </font>{{ question.answer_four }}
+                                {% else %}
+                                    &#8226; {{ question.answer_four }}
+                                {% endif %} <br />
+                            {% endif %}
+                            {% if question.correct_response %}
+                                <h3>Correct: {{ question.correct_response }}</h3>
+                            {% endif %}
+                        {% else %}
+                            {% if question.answer_one %}
+                                <input type="radio" name="choice{{ forloop.counter }}" id="1" value=1> {{ question.answer_one }} <br />
+                            {% endif %}
+                            {% if question.answer_two %}
+                                <input type="radio" name="choice{{ forloop.counter }}" id="2" value=2> {{ question.answer_two }} <br />
+                            {% endif %}
+                            {% if question.answer_three %}
+                                <input type="radio" name="choice{{ forloop.counter }}" id="3" value=3> {{ question.answer_three }} <br />
+                            {% endif %}
+                            {% if question.answer_four %}
+                                <input type="radio" name="choice{{ forloop.counter }}" id="4" value=4> {{ question.answer_four }} <br /> 
+                            {% endif %}
+                            {% if question.incorrect_response %}
+                                <h3>Incorrect: {{ question.incorrect_response }}</h3>
+                            {% endif %}
+                        {% endif %} 
+                    {% else %}
+                        {% if question.answer_one %}
+                            <input type="radio" name="choice{{ forloop.counter }}" id="1" value=1> {{ question.answer_one }} <br />
+                        {% endif %}
+                        {% if question.answer_two %}
+                            <input type="radio" name="choice{{ forloop.counter }}" id="2" value=2> {{ question.answer_two }} <br />
+                        {% endif %}
+                        {% if question.answer_three %}
+                            <input type="radio" name="choice{{ forloop.counter }}" id="3" value=3> {{ question.answer_three }} <br />
+                        {% endif %}
+                        {% if question.answer_four %}
+                            <input type="radio" name="choice{{ forloop.counter }}" id="4" value=4> {{ question.answer_four }} <br /> 
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </ol>
+            <input type="submit" value="Submit Answers" />
+            </form>
+        {% endif %}
+    {% endif %}
+    <hr>
+    <div class="row-fluid">
+        {% if simulation %}
+            <div class="span6">
+                <a class="btn" href="{% url 'simulation' course.url lab.url simulation.url %}">Go to Simulation</a>
+            </div>
+        {% endif %}
+        {% if hardware %}
+            <div class="span6">
+                <ul class="nav pull-right">
+                    <a class="btn" href="{% url 'hardware' course.url lab.url hardware.url %}">Go to Hardware</a>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: {{ course_name }}{% endblock %}
+{% block sidetitle %}{{ course_name }} Laboratories{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_list.html' with labs=labs course=course%}
+{% endblock %}
+
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course_name }}</h1>
+	<h2>Prerequisites</h2>
+	{% if prereq_topics %}
+		{% for topic in prereq_topics %}
+		<h3> Topic {{forloop.counter}}: {{topic.question}} </h3>
+			{% for answer in topic.answer %}
+				{% if answer.element_type == 'text' %}
+					<p>{{ answer.text_input}}</p>
+				{% elif answer.element_type == 'image' %}
+					<p><center><img src="{% static answer.image_input %}"></center></p>
+				{% elif answer.element_type == 'latex' %}
+					<p><center>$${{ answer.equation_input}}$$</center></p>
+				{% elif answer.element_type == 'equation' %}
+					<p><center>{{ answer.equation_input}}</center></p>
+				{% elif answer.element_type == 'video' %}
+					<p><center><iframe width="560" height="315" src="{{ answer.video_input }}" frameborder="0" allowfullscreen></iframe></center></p>
+				{% endif %}
+			{% endfor %}
+		{% endfor %}
+	{% endif %}
+</div>
+{% endblock %}

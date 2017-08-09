@@ -1,0 +1,32 @@
+{% extends 'VLA/base.html' %}
+
+{% block title %}VLA: Help{% endblock %}
+{% block sidetitle %}Definition Categories{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/cat_section_list.html' with topics=vocab_topic_list %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ vocab_topic_name }}</h1><P>
+    {% if vocab_words %}
+        <ul class="nav nav-list"class="nav nav-list">
+        {% for word in vocab_words %}
+            <b><a href="{% url 'definition' word.url %}">{{ word.word }}</a></b>
+            <ul class="nav nav-list"class="nav nav-list">
+                {% if word.definition %}
+                    <li>{{ word.definition }}</li>
+                {% endif %}
+                {% if word.synonyms %}
+                    <li><i>Synonyms:</i> {{ word.synonyms|join:", " }}</li>
+                {% endif %}
+            </ul>
+        {% endfor %}
+        </ul>
+    {% else %}
+    There are no definitions in this category.
+    {% endif %}
+    <ul class="nav nav-list"class="nav nav-list">&nbsp;</ul>
+    <a class="btn" href="/VLA/help/">Go to Help</a>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: Home{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h2>Let's get that netlist.</h2>
+    <h2> MultiSim Verification Instructions </h2>
+	<h4>If you used Multisim to simulate your circuit, please export the netlist file and upload the file below. <br>
+	To generate a netlist file in Multisim: Save your design and select transfer -> export SPICE netlist from the top navigation bar.
+	From there, simply save the file and upload it below. </h4>
+        <form action="/vla/test/" method="post" enctype="multipart/form-data" >
+            {% csrf_token %}
+            {{ image_form }}
+            <p><input type="submit" name="multisim-upload" value="Upload" /></p>
+        </form>   
+    {% if error1 %} 
+	<h2> An error has occured: invalid component in netlist. </h2>
+    {% endif %}
+    {% if out_str %}
+	{{ out_str }}
+    {% endif %}
+</div>
+{% endblock %}

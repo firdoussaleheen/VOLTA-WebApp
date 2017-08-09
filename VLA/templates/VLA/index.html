@@ -1,0 +1,26 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: Home{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>Hello {{ user.username }}, welcome to VOLTA!</h1>
+
+    <ul class="nav nav-list">&nbsp;</ul>
+    <img src="{% static 'VLA/images/main_image.jpg' %}"><br>
+	
+	<h1> <font size="4"> The project is funded by the National Science Foundation (Grant number DUE 1245277). </font></h1>
+<!-- 
+    {% if not allow_recordings %}
+        <form method="get" action="speech_recorder" target="_blank">
+            {% csrf_token %}
+            
+            This program records audio for software development purposes. If you want to allow this, please select Yes. If not, please select No.
+            <h2>Will you allow voice recording? <form action="http://google.com"><input class="btn btn-primary" type="submit" name="yes" value="Yes"/> <input class="btn btn-primary" type="submit" name="no" value="No"/></form></h2>
+        </form>
+    {% endif %}
+-->
+
+</div>
+{% endblock %}

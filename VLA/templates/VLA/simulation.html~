@@ -1,0 +1,106 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: {{ lab_name }} Simulation{% endblock %}
+
+{% block sidetitle %}{{ lab_name }} Sections{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_section_list.html' with labs=labs %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course.name }}</h1>
+    <h2>Lab {{ lab.lab_number }}: {{ simulation.name }}</h2>
+    <h4>Use  <a href="{% url 'question' 'How_to_use_Multisim' %}">Multisim</a> circuit simulation for this assignment </h4>
+    <hr> 
+    {% if simulation_elements %}
+    {% for element in simulation_elements %}
+        {% if element.element_type == 'text' %}
+            <p>{{ element.text_input }}</p>
+        {% elif element.element_type == 'image' %}
+            <p><center><img src="{% static element.image_input %}"></center></p>
+        {% elif element.element_type == 'latex' %}
+            <p><center>$${{ element.equation_input }}$$</center></p>
+        {% elif element.element_type == 'equation' %}
+            <p><center>{{ element.equation_input }}</center></p>
+        {% elif element.element_type == 'table' %}
+            <p><center>THERE WILL BE A TABLE HERE</center></p>
+        {% elif element.element_type == 'caption' %}
+            <p><center><b>{{ element.text_input }}</b></center></p>
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+    
+
+    <hr>
+    
+
+
+
+    {% if student_progress.lab_number %}
+
+    <h2> Multisim Circuit Comparator </h2>
+
+    <h4>1. Generate a SPICE netlist of your simulation from Multisim  </h5>
+    <h4>3. Save SPICE netlists  </h5>
+    <h4>4. Upload your netlist file(.cir) to Multisim Circuit Comparator below </h5>
+    <h4>5. Back to simulation and revise your circuits if your result shows your simulation is not correct </h5>
+
+        <form action="{% url 'simulation' course.url lab.url simulation.url %}" method="post" enctype="multipart/form-data" >
+            {% csrf_token %}
+            {{ image_form }}
+            <p><input type="submit" name="multisim-upload" value="Upload" /></p>
+        </form>
+		{{ student_progress.result}}  
+    {% endif %}
+
+    {% if not student_progress.simulation_finished %}
+
+	<form method="post" action="{% url 'simulation' course.url lab.url simulation.url %}">
+            {% csrf_token %}
+            <h2>Are you finished with the Simulation? <input class="btn btn-primary" type="submit" name="submit" value="Yes"/></h2>
+        </form>
+    {% endif %}
+<!--
+    <hr>
+    <h2> Circuitlab Verification Instructions </h2> 
+	<h4>If you used Circuitlab to simulate your circuit, please take a screenshot of the
+        circuit and upload the image to VOLTA's Circuit Recognizer.</h4>
+	<h4> Please submit a circuit which is not cluttered and has no crossing wires. </h4>
+        <form action="{% url 'simulation' course.url lab.url simulation.url %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ image_form }} 
+            <p><input type="submit" value="Upload" /></p>
+        </form>
+     
+-->
+
+    {% if student_progress.netlist %}
+	{{ student_progress.netlist }}
+    {% endif %}
+    {% if student_progress.sim_image %}
+        <h4>Here is your processed circuit: </h4>
+        <center><img src="{{ student_progress.sim_image.url }}"></center><P>
+        <center><img src="{{ student_progress.processed_sim_image.url }}"></center><P>
+        <center><small><small> If you notice any problems with the processed circuit, email zack.smith@temple.edu with your circuit.</small></small></center>
+    {% endif %}
+
+   <div class="row-fluid">
+        {% if theorytest %}
+            <div class="span6">
+                <a class="btn" href="{% url 'theorytest' course.url lab.url theorytest.url %}">Go to Theory Test</a>
+            </div>
+        {% endif %}
+        {% if hardware %}
+            <div class="span6">
+                <ul class="nav pull-right">
+                    <a class="btn" href="{% url 'hardware' course.url lab.url hardware.url %}">Go to Hardware</a>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

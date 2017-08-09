@@ -1,0 +1,5 @@
+* Translated Netlist *
+c C1 Vc 0
+r R1 Vpulse Vc
+v V1 Vpulse 0
+.end

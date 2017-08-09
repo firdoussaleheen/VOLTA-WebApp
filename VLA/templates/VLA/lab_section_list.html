@@ -1,0 +1,27 @@
+
+    <ul class="nav nav-list">
+        {% if theory %}<li><a href="{% url 'theory' course.url lab.url theory.url %}">Theory
+            {% if student_progress.theory_finished %}<font color="#009900"> &#x2713; </font>{% else %}<font color="993333"> &#x2717;</font>{% endif %} </a></li>{% endif %}
+        {% if theorytest %}<li><a href="{% url 'theorytest' course.url lab.url theorytest.url %}">Theory Test
+            {% if student_progress.theory_test_finished %}<font color="#009900"> &#x2713; </font>{% else %}<font color="993333"> &#x2717;</font>{% endif %} </a></li>{% endif %}
+        {% if simulation %}<li><a href="{% url 'simulation' course.url lab.url simulation.url %}">Simulation
+            {% if student_progress.simulation_finished %}<font color="#009900"> &#x2713; </font>{% else %}<font color="993333"> &#x2717;</font>{% endif %} </a></li>{% endif %}
+        {% if simulationtest %}<li><a href="{% url 'simulationtest' course.url lab.url simulationtest.url %}">Simulation Test
+            {% if student_progress.sim_test_finished %}<font color="#009900"> &#x2713; </font>{% else %}<font color="993333"> &#x2717;</font>{% endif %} </a></li>{% endif %}
+        {% if hardware %}<li><a href="{% url 'hardware' course.url lab.url hardware.url %}">Hardware
+            {% if student_progress.hardware_finished %}<font color="#009900"> &#x2713; </font>{% else %}<font color="993333"> &#x2717;</font>{% endif %} </a></li>{% endif %}
+        {% if results %}<li><a href="{% url 'results' course.url lab.url results.url %}">Results
+            {% if student_progress.results_finished %}<font color="#009900"> &#x2713; </font>{% else %}<font color="993333"> &#x2717;</font>{% endif %} </a></li>{% endif %}
+        {% if labtest %}<li><a href="{% url 'labtest' course.url lab.url labtest.url %}">Laboratory Test
+            {% if student_progress.lab_test_finished %}<font color="#009900"> &#x2713; </font>{% else %}<font color="993333"> &#x2717;</font>{% endif %} </a></li>{% endif %}
+        
+    </ul>
+    {% if lab.start_date %}
+    <ul class="nav nav-list">&nbsp;</ul>
+    <b>Assigned date:</b><ul class="nav nav-list">{{ lab.start_date }}</ul>
+    {% endif %}
+    {% if lab.due_date %}
+    <b>Due Date:</b><ul class="nav nav-list"> {{ lab.due_date }}</ul>
+    {% endif %}
+    <ul class="nav nav-list">&nbsp;</ul>
+    <a href="/VLA/course/{{ course.url }}/">Return to Lab list</a>

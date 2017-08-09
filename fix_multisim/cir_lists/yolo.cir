@@ -1,0 +1,7 @@
+* Translated Netlist *
+C2 2 0 1e-006farads
+C1 1 0 1e-006farads
+vDC2 2 0 12volts
+vDC3 1 0 0volts
+vAC4 1 0 0 1 1000 0 0volts
+.end

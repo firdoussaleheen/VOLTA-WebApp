@@ -1,0 +1,24 @@
+{% extends 'VLA/base.html' %}
+
+{% block title %}VLA: Help{% endblock %}
+{% block sidetitle %}Question Categories{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/question_section_list.html' with topics=question_topic_list %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ question_topic_name }}</h1><P>
+    {% if question_topic %}
+        <ul class="nav nav-list"class="nav nav-list">
+        {% for question in question_topic %}
+            <p><b><a href="{% url 'question' question.url %}">{{ question.question }}?</a></b></p>
+        {% endfor %}
+        </ul>
+    {% else %}
+    There are no questions in this category.
+    {% endif %}
+    <ul class="nav nav-list"class="nav nav-list">&nbsp;</ul>
+    <a class="btn" href="/VLA/help/">Go to Help</a>
+</div>
+{% endblock %}

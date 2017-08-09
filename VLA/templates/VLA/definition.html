@@ -1,0 +1,26 @@
+{% extends 'VLA/base.html' %}
+
+{% block title %}VLA: Help{% endblock %}
+{% block sidetitle %}Definition Categories{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/cat_section_list.html' with topics=vocab_topic_list %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ definition_name }}</h1><P>
+    {% if definition %}
+        <ul class="nav nav-list"class="nav nav-list">
+       {{ definition.definition }}
+        </ul>
+        {% if synonyms %}
+            <ul class="nav nav-list"class="nav nav-list">&nbsp;</ul>
+            <i>Synonyms:</i> {{ synonyms|join:", " }}
+        {% endif %}
+    {% else %}
+    There is no definition for this word.
+    {% endif %}
+    <ul class="nav nav-list"class="nav nav-list">&nbsp;</ul>
+    <a class="btn" href="{% url 'help' %}">Go to Help</a>
+</div>
+{% endblock %}

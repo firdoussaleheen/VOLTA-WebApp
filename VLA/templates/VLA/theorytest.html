@@ -1,0 +1,74 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: {{ lab_name }} Theory Test{% endblock %}
+
+{% block sidetitle %}{{ lab_name }} Sections{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_section_list.html' with labs=labs %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course.name }}</h1>
+    <h2>Lab {{ lab.lab_number }}: {{ theorytest.name }}</h2>
+    
+    {% if not questions_filled %}<h3>You must answer all questions!</h3>{% endif %}
+    
+    {% if theorytest_elements %}
+        {% for element in theorytest_elements %}
+            {% if element.element_type == 'text' %}
+            <p>{{ element.text_input}}</p>
+            {% elif element.element_type == 'image' %}
+                <p><center><img src="{% static element.image_input %}"></center></p>
+            {% elif element.element_type == 'latex' %}
+                <p><center>$${{ element.equation_input}}$$</center></p>
+            {% elif element.element_type == 'equation' %}
+                <p><center>{{ element.equation_input}}</center></p>
+            {% elif element.element_type == 'table' %}
+                <p><center>THERE WILL BE A TABLE HERE</center></p>
+            {% elif element.element_type == 'caption' %}
+                <p><center><b>{{ element.text_input}}</b></center></p>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    
+    {% if student_progress.theory_test_finished %}
+        <h4>Congratulations! You have completed the test. Your score has been recorded.</h4>
+    {% else %}
+        {% if theorytest_questions %}
+            <form method="post" action="{% url 'theorytest' course.url lab.url theorytest.url %}">
+            <ol>
+                {% for question in theorytest_questions %}
+                    <li>{{ question.question }}</li>
+                    
+                    {% csrf_token %}
+                    {% if question.answer_one %}<input type="radio" name="choice{{ forloop.counter }}" id="1" value=1> {{ question.answer_one }} <br />{% endif %}
+                    {% if question.answer_two %}<input type="radio" name="choice{{ forloop.counter }}" id="2" value=2> {{ question.answer_two }} <br />{% endif %}
+                    {% if question.answer_three %}<input type="radio" name="choice{{ forloop.counter }}" id="3" value=3> {{ question.answer_three }} <br />{% endif %}
+                    {% if question.answer_four %}<input type="radio" name="choice{{ forloop.counter }}" id="4" value=4> {{ question.answer_four }} <br />{% endif %}   
+                {% endfor %}
+            </ol>
+            <input type="submit" value="Submit Answers" />
+            </form>
+    {% endif %}
+    {% endif %}
+    <hr>
+    <div class="row-fluid">
+        {% if theory %}
+            <div class="span6">
+                <a class="btn" href="{% url 'theory' course.url lab.url theory.url %}">Go to Theory</a>
+            </div>
+        {% endif %}
+        {% if simulation %}
+            <div class="span6">
+                <ul class="nav pull-right">
+                    <a class="btn" href="{% url 'simulation' course.url lab.url simulation.url %}">Go to Simulation</a>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

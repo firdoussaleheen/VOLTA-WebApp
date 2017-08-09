@@ -1,0 +1,6 @@
+* Translated Netlist *
+S1 2 1 
+C1 3 4 1e-06
+R1 2 3 100
+VDC0 1 4 12
+.end

@@ -1,0 +1,50 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: {{ lab_name }} Results{% endblock %}
+
+{% block sidetitle %}{{ lab_name }} Sections{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_section_list.html' with labs=labs %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course.name }}</h1>
+    <h2>Lab {{ lab.lab_number }}: {{ results.name }}</h2>
+    {% if results_questions %}
+        <ol>
+        {% for question in results_questions %}
+            {% if question.answer_type == 'text' %}
+                <li>{{ question.question}}</li>
+            {% elif question.answer_type == 'table' %}
+                <p>THIS SHOULD BE A TABLE</p>
+            {% endif %}
+        {% endfor %}
+        </ol>
+    {% endif %}
+    <hr>
+    {% if not student_progress.results_finished %}
+        <form method="post" action="{% url 'results' course.url lab.url results.url %}">
+            {% csrf_token %}
+            <h2>Are you finished with the Results? <input class="btn btn-primary" type="submit" name="submit" value="Yes"/></h2>
+        </form>
+    {% endif %}
+    <div class="row-fluid">
+        {% if hardware %}
+        <div class="span6">
+            <a class="btn" href="{% url 'hardware' course.url lab.url hardware.url %}">Go to Hardware</a>
+        </div>
+        {% endif %}
+		{% if labtest %}
+            <div class="span6">
+                <ul class="nav pull-right">
+                    <a class="btn" href="{% url 'labtest' course.url lab.url labtest.url %}">Go to Lab Test</a>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

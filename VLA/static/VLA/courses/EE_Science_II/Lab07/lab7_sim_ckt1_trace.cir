@@ -1,0 +1,5 @@
+* Translated Netlist *
+r R1 Vout 0
+l L1 Vin Vout
+v V1 Vin 0
+.end

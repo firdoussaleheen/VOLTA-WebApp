@@ -1,0 +1,5 @@
+* Translated Netlist *
+C1 0 2 1e-06
+R1 1 2 1000
+VAC0 1 0 junk1 1.414213562 10 junk4 junk5
+.end

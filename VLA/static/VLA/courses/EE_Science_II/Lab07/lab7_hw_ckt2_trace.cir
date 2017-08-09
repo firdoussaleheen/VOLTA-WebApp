@@ -1,0 +1,5 @@
+* Translated Netlist *
+c C1 1 2
+r R1 2 0
+v V1 1 0
+.end

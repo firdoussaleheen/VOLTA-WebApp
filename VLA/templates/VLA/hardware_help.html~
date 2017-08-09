@@ -1,0 +1,24 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: Home{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h2>Let's toubleshoot your circuit for "{{lab}}".</h2>
+    
+    <ul class="nav nav-list">&nbsp;</ul>
+    <left>First, make sure all of your components are not damaged.</left><P>    
+    <center><iframe width="560" height="315" src="//www.youtube.com/embed/IBItMu3dyLU" frameborder="0" allowfullscreen></iframe></center><P>    
+    <left>Next, let's check that the correct components are connected to the breadboard by checking continuity at each node.</left><P>
+    <center><iframe width="420" height="315" src="//www.youtube.com/embed/dQ5B715tO4M" frameborder="0" allowfullscreen></iframe></center><P>
+    {% if student_progress.hardwarehelp %}    
+    <center><img src= "{{ student_progress.processed_sim_image.url }}"></center>    
+    {% endif %}    
+    {% if student_progress.hardwarehelp %}
+	{{ student_progress.hardwarehelp }}
+    {% endif %}
+        </form>
+    
+</div>
+{% endblock %}

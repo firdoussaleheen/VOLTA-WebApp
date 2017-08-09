@@ -1,0 +1,62 @@
+<head>
+<script language="javascript">
+<!--
+
+
+function showimage()
+{
+if (!document.images)
+return 
+
+//Combobox values are the path of the circuit image, concatinated with tranlateNetlist() output. They are split with a ~
+var splitCirc = document.PicAndList.combo.options[document.PicAndList.combo.selectedIndex].value.split("~");
+
+//Update the image
+document.images.CircuitPicture.src= splitCirc[0];
+
+//Update the tranlateNetlist() result
+document.getElementById('HelpList').innerHTML = splitCirc[1]; 
+}
+
+//-->
+</script>
+</head>
+
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: Home{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+
+    <h2>Let's toubleshoot your circuits for "{{lab}}".</h2>
+    
+    <ul class="nav nav-list">&nbsp;</ul>
+    <left>First, make sure all of your components are not damaged.</left><P>    
+    <center><iframe width="560" height="315" src="//www.youtube.com/embed/IBItMu3dyLU" frameborder="0" allowfullscreen></iframe></center><P>    
+    <left><br><br>If your components were tested to work, then perhaps a component is loose or connected incorrectly. Check that the correct components are connected to the breadboard by testing continuity at each node. Please select a circuit for a list of components at each node.</left><P>    
+    <table border="0" cellspacing="0" cellpadding="0">
+    <tr>
+    <td width="100%"><form name="PicAndList"><p>
+    <select name="combo" size="1" onChange="showimage()">
+    {% for circ in answerkey_circuits %}
+    <option value="{{ circ.1 }}">{{ circ.0 }}</option>
+    {% endfor %}
+    </select>
+    </p>
+    </form>
+    </td>
+    </tr>
+    <tr>
+    <td width="100%"><p align="center"><img src={{default_picture}} name="CircuitPicture" ></td>
+    </tr>
+    <td id="HelpList">
+    {{default_help_list}}
+    </td> 
+    </table>
+    <left><br><br> Checking for continuity is made easy by using the beeping continuity test function on the bench multimeter. Watch the video for how to switch to that mode.</left><P>
+    <center><iframe width="420" height="315" src="//www.youtube.com/embed/dQ5B715tO4M" frameborder="0" allowfullscreen></iframe></center><P>
+   
+
+{% endblock %}

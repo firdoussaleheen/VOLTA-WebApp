@@ -1,0 +1,6 @@
+* Translated Netlist *
+L1 2015 2016 0.001henry
+C1 2016 0 4.7e-09farads
+R1 2017 2015 100ohms
+*(pulse)vAC0 2017 0 junk1 1 0 junk4 junk5volts
+.end

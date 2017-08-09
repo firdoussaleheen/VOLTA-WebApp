@@ -1,0 +1,79 @@
+{% extends 'VLA/base.html' %}
+
+{% block title %}VLA: {{ course_name }}{% endblock %}
+{% block sidetitle %}{{ course_name }} Laboratories{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_list.html' with labs=labs course=course%}
+{% endblock %}
+
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course_name }}</h1>
+    <ul class="nav nav-list">&nbsp;</ul>
+    <div class="row-fluid">
+        <div class="span6">
+            {% if course.section_number %}
+            <p><b>Section Number:</b> {{ course.section_number }}
+            {% endif %}
+            {% if course.lecture_time %}
+            <br><b>Lecture:</b> {{ course.lecture_time }} {% if course.lecture_days %} {{ course.lecture_days }} {% endif %}
+            {% endif %}
+            {% if course.lecture_location %}
+            <br><b>Lecture Location:</b> {{ course.lecture_location }} 
+            {% endif %}
+        
+            {% if course.instructor_name %}
+            <p><b>Instructor:</b> {{ course.instructor_name }}
+            {% endif %}
+            {% if course.instructor_email %}
+            <br><b>Email:</b> {{ course.instructor_email }}
+            {% endif %}
+            {% if course.instructor_phone %}
+            <br><b>Phone Number:</b> {{ course.instructor_phone }}
+            {% endif %}
+            {% if course.instructor_office_location %}
+            <br><b>Office Location:</b> {{ course.instructor_office_location }}
+            {% endif %}
+            {% if course.instructor_office_hours %}
+            <br><b>Office Hours:</b> {{ course.instructor_office_hours }} {% if course.instructor_office_hours %} {{ course.instructor_office_days }} {% endif %}
+            {% endif %}
+        </div>
+        <div class="span6">
+            {% if course.website %}
+            <p><b>Website:</b> <a href="{{ course.website }}" target="new">{{ course.website }}</a>
+            {% endif %}
+            {% if course.lab_time %}
+            <br><b>Lab:</b> {{ course.lab_time }} {% if course.lab_days %} {{ course.lab_days }} {% endif %}
+            {% endif %}
+            {% if course.lab_location %}
+            <br><b>Lab Location:</b> {{ course.lab_location }} 
+            {% endif %}
+        
+            {% if course.TA_name %}
+            <p><b>TA:</b> {{ course.TA_name }}
+            {% endif %}
+            {% if course.TA_email %}
+            <br><b>Email:</b> {{ course.TA_email }}
+            {% endif %}
+            {% if course.TA_phone %}
+            <br><b>Phone Number:</b> {{ course.TA_phone }}
+            {% endif %}
+            {% if course.TA_office_location %}
+            <br><b>Office Location:</b> {{ course.TA_office_location }}
+            {% endif %}
+            {% if course.TA_office_hours %}
+            <br><b>Office Hours:</b> {{ course.TA_office_hours }} {% if course.TA_office_hours %} {{ course.TA_office_days }} {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if course.course_description %}
+    <p><b>Course Description:</b> {{ course.course_description }}
+    {% endif %}
+    
+    {% if course.course_overview %}
+    <p><b>Course Overview:</b> {{ course.course_overview }}
+    {% endif %}
+</div>
+{% endblock %}

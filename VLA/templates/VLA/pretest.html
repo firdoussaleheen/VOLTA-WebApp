@@ -1,0 +1,66 @@
+{% extends 'VLA/base.html' %}
+{% load staticfiles %}
+
+{% block title %}VLA: {{ lab_name }} Pretest{% endblock %}
+
+{% block sidetitle %}{{ lab_name }} Sections{% endblock %}
+{% block sidebar %}
+    {% include 'VLA/lab_section_list.html' with labs=labs %}
+{% endblock %}
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course.name }}</h1>
+    <h2>Lab {{ lab.lab_number }}: {{ pretest.name }}</h2>
+    
+    {% if test_complete %}
+        {% for question in pretest_questions %}
+            <li>{{ question.question }}</li>
+            {% if question.answer_one %}
+                {% if  forloop.counter == 1 and choice1 and choice1 == corrent_answer_number %}
+                    <input type="radio" name="choice{{ forloop.counter }}" id="1" value="1" checked> {{ question.answer_one }} <br />
+                {% else %}
+                    <input type="radio" name="choice{{ forloop.counter }}" id="1" value="1"> {{ question.answer_one }} <br />
+                {% endif %}
+            {% endif %}
+            {% if question.answer_two %}<input type="radio" name="choice{{ forloop.counter }}" id="2" value="2"> {{ question.answer_two }} <br />{% endif %}
+            {% if question.answer_three %}<input type="radio" name="choice{{ forloop.counter }}" id="3" value="3"> {{ question.answer_three }} <br />{% endif %}
+            {% if question.answer_four %}<input type="radio" name="choice{{ forloop.counter }}" id="4" value="4"> {{ question.answer_four }} <br />{% endif %}   
+        {% endfor %}
+    {% else %}
+        {% if pretest_questions %}
+            <form method="post" action="/VLA/course/{{ course.url }}/lab/{{ lab.url }}/pretest/{{ pretest.url }}/">
+            <ol>
+                {% for question in pretest_questions %}
+                    <li>{{ question.question }}</li>
+                    
+                    {% csrf_token %}
+                    {% if question.answer_one %}
+                        {% if  forloop.counter == 1 and choice1 and choice1 == 'one' %}
+                            <input type="radio" name="choice{{ forloop.counter }}" id="1" value="1" checked> {{ question.answer_one }} <br />
+                        {% else %}
+                            <input type="radio" name="choice{{ forloop.counter }}" id="1" value="1"> {{ question.answer_one }} <br />
+                        {% endif %}
+                    {% endif %}
+                    {% if question.answer_two %}<input type="radio" name="choice{{ forloop.counter }}" id="2" value="2"> {{ question.answer_two }} <br />{% endif %}
+                    {% if question.answer_three %}<input type="radio" name="choice{{ forloop.counter }}" id="3" value="3"> {{ question.answer_three }} <br />{% endif %}
+                    {% if question.answer_four %}<input type="radio" name="choice{{ forloop.counter }}" id="4" value="4"> {{ question.answer_four }} <br />{% endif %}   
+                {% endfor %}
+            </ol>
+            <input type="submit" value="Submit Answers" />
+            </form>
+    {% endif %}
+    <P>
+    {% endif %}
+    {% if not theory.is_completed %}
+        <h2>Are you finished with the Pretest? <input class="btn btn-primary" type="submit" name="submit" value="Yes"/></h2>
+    {% endif %}
+    
+    <a href="/VLA/course/{{ course.url }}/lab/{{ lab.url }}/theory/{{ theory.url }}">Go to Theory</a>
+    <ul class="nav pull-right">
+        <a href="/VLA/course/{{ course.url }}/lab/{{ lab.url }}/prelab/{{ prelab.url }}">Go to Simulation</a>
+    </ul>
+</div>
+
+
+{% endblock %}

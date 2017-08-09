@@ -1,0 +1,1456 @@
+from __future__ import absolute_import, division
+import re
+#import cv, cv2, sys, math, numpy as np # all for circuit image processing
+from django.shortcuts import render
+from django.contrib.auth import authenticate
+
+from .models import *
+from .forms import UserSimulationImage
+from student.models import UserProfile, CoursePermission, LabProgress, SimulationQuestionResponse
+from tutor.models import Node, AnswerWithQuestion, AnswerElement
+
+def error404(request):
+    return render(request,'VLA/404.html')
+
+def index(request):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Display course list in sidebar
+        cour_list = get_course_list(user)
+        context_dict = {'cour_list': cour_list}
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        profile = UserProfile.objects.get(user=user)
+        context_dict['allow_recordings'] = profile.allow_recording_answered
+        
+        # If request is a POST, try to pull out relevant information
+        # Set is_completed to True
+        if request.method == 'POST':
+            
+            profile.allow_recording_answered = True
+            if 'yes' in request.POST:
+                profile.allow_recording = True
+            profile.save()
+            
+            context_dict['allow_recordings'] = True
+            
+        return render(request, 'VLA/index.html', context_dict)
+
+# View used to display About information on VLA
+def about(request):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        context_dict = {'logged_in': False}
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Display course list in sidebar
+        cour_list = get_course_list(user)
+        context_dict = {'cour_list': cour_list}
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()  
+
+        context_dict['logged_in'] = True
+    return render(request, 'VLA/about.html', context_dict)
+
+# View used to present Course with all course, instructor, TA info
+def course(request, course_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get course name and set course url
+        course_name = course_name_url.replace('_', ' ')
+        context_dict = {'course_name': course_name, 'course_name_url': course_name_url}
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get all course information for selected course
+        try:
+            course = Course.objects.get(name=course_name)
+            context_dict['course'] = course
+            
+        except Course.DoesNotExist:
+            pass
+
+        # Get prereq information for selected course
+        try:
+            prereq = Prereq.objects.get(course = course)
+            context_dict['prereq_name_url'] = prereq.name.replace(' ','_')  
+            context_dict['prereq'] = prereq
+        except Prereq.DoesNotExist:
+            pass
+        
+        # Display all course related labs in the sidebar
+        try:
+            context_dict['labs'] = get_lab_list(course, user)
+        except Laboratory.DoesNotExist:
+            pass
+    
+        return render(request, 'VLA/course.html', context_dict)
+
+
+# View used to present Prereqs for a given course
+def prereq(request, course_name_url, prereq_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get course name and prereq name and set course url
+        course_name = course_name_url.replace('_', ' ')
+        prereq_name = prereq_name_url.replace('_', ' ')
+        context_dict = {'course_name': course_name, 'course_name_url': course_name_url,
+                        'prereq_name': prereq_name, 'prereq_name_url': prereq_name_url}
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get all course information for selected course
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+
+        # Get all prereq information for selected course
+        # prereq info consists of AnswerWithQuestion object with associated AnswerElement 
+        try:
+            prereq = Prereq.objects.get(course = course)
+            context_dict['prereq'] = prereq
+            prereq_topics = prereq.topic.all()
+            for topic in prereq_topics:
+                topic.answer = AnswerElement.objects.filter(answer_with_question=topic)
+            context_dict['prereq_topics']= prereq_topics
+            
+        except Prereq.DoesNotExist:
+            pass
+            
+        # Display all course related labs in the sidebar
+        try:
+            context_dict['labs'] = get_lab_list(course, user)
+        except Laboratory.DoesNotExist:
+            pass
+    
+        return render(request, 'VLA/prereq.html', context_dict)
+
+    
+# View used to present Laboratory and Objectives for a given Course
+def lab(request, course_name_url, lab_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get lab and course name
+        lab_name = lab_name_url.replace('_', ' ')
+        course_name = course_name_url.replace('_', ' ')
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict = {'lab_name': lab_name}
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get selected course 
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+        
+        # Get selected lab and extract objectives
+        try:
+            lab = Laboratory.objects.filter(course=course).get(name=lab_name)
+            lab.url = lab_name_url
+            context_dict['lab'] = lab
+            context_dict['student_progress'] = LabProgress.objects.filter(user=user).get(lab=lab)
+            context_dict['objectives'] = LabObjective.objects.filter(lab=lab)
+            context_dict['equipment'] = LabEquipment.objects.filter(lab=lab)
+            
+            # Display lab sections in sidebar
+            context_dict = get_sections(context_dict, lab)
+            
+        except Laboratory.DoesNotExist:
+            pass
+    
+        return render(request, 'VLA/lab.html', context_dict)
+
+
+# Lab section views: theory, theorytest, simulation, hardward, etc.
+
+# View used for presenting Theory section of a given Laboratory/Course
+# Information is presented in the form of text, images, equations, videos, or tables
+def theory(request, course_name_url, lab_name_url, theory_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+    
+        # Get course name and lab name
+        course_name = course_name_url.replace('_', ' ')
+        lab_name = lab_name_url.replace('_', ' ')
+        context_dict = {'lab_name': lab_name}
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get Course and set course URL
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+        
+        # Get Laboratory, lab sections, and theory elements
+        try:
+            lab = Laboratory.objects.filter(course=course).get(name=lab_name)
+            lab.url = lab_name_url
+            context_dict['lab'] = lab
+            context_dict['student_progress'] = LabProgress.objects.filter(user=user).get(lab=lab)
+            context_dict = get_sections(context_dict, lab)
+            context_dict['theory_elements'] = TheoryElement.objects.filter(theory=context_dict['theory'])
+            
+            # Update number of views if link was clicked
+            if request.method == 'GET':
+                context_dict['student_progress'].theory_views = context_dict['student_progress'].theory_views + 1
+                context_dict['student_progress'].save()
+        except Laboratory.DoesNotExist:
+            pass
+    
+        # If request is a POST, try to pull out relevant information
+        # Set is_completed to True
+        if request.method == 'POST':
+            context_dict['student_progress'].theory_finished = True
+            context_dict['student_progress'].save()
+        return render(request, 'VLA/theory.html', context_dict)
+    
+# View used for giving test on theory
+# Questions are multiple choice, with at least two choices needed
+def theorytest(request, course_name_url, lab_name_url, theorytest_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get course name and lab name
+        course_name = course_name_url.replace('_', ' ')
+        lab_name = lab_name_url.replace('_', ' ')
+        context_dict = {'lab_name': lab_name}
+        
+        # Set to true before test is taken, in order to surpress error message
+        # If all questions are not answered will be set to false
+        context_dict['questions_filled'] = True
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get course and construct course URL
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+        
+        # Get lab, lab sections, and theory test questions
+        try:
+            lab = Laboratory.objects.filter(course=course).get(name=lab_name)
+            lab.url = lab_name_url
+            context_dict['lab'] = lab
+            context_dict['student_progress'] = LabProgress.objects.filter(user=user).get(lab=lab)
+            context_dict = get_sections(context_dict, lab)
+            theorytest_questions = TheoryTestQuestion.objects.filter(theorytest=context_dict['theorytest'])
+            context_dict['theorytest_questions'] = theorytest_questions
+            context_dict['theorytest_elements'] = TheoryTestElement.objects.filter(theorytest=context_dict['theorytest'])
+            
+            # Update number of views if link was clicked
+            if request.method == 'GET':
+                context_dict['student_progress'].theory_test_views = context_dict['student_progress'].theory_test_views + 1
+                context_dict['student_progress'].save()
+        except Laboratory.DoesNotExist:
+            pass
+        
+        # If request is a POST, try to pull out relevant information.
+        # Checks to see if each question is answered
+        # if not return questions_filled=False and send to theorytest.html
+        # Assigns each answer to question.given_answer
+        if request.method == 'POST':
+            num_of_questions = 0
+            num_of_correct = 0
+            for question in theorytest_questions:
+                num_of_questions = num_of_questions + 1
+                name = 'choice' + str(num_of_questions)
+                if name in request.POST:
+                    question.given_answer = int(request.POST[name])
+                    question.is_answered = True
+                    question.save()
+                else:
+                    context_dict['questions_filled'] = False
+                    context_dict['test_complete'] = False
+                    return render(request, 'VLA/theorytest.html', context_dict)
+                if question.given_answer == question.correct_answer_number:
+                    num_of_correct = num_of_correct + 1
+                    
+            # Calculate test score            
+            context_dict['student_progress'].theory_test_score = num_of_correct/num_of_questions*100
+
+            # Set just_finished and is_completed to True and save
+            context_dict['just_finished'] = True
+            context_dict['theorytest_questions'] = theorytest_questions
+            context_dict['student_progress'].theory_test_finished = True
+            context_dict['student_progress'].save()
+        else:
+            context_dict['just_finished'] = False
+        
+        return render(request, 'VLA/theorytest.html', context_dict)
+
+# View for displaying directions for circuit simulation
+# Information is presented in the form of text, images, equations, videos, or tables
+# Simulation results will be recorded in the form of an image uploaded by the User
+def simulation(request, course_name_url, lab_name_url, simulation_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get course name, lab name, and simulation name
+        course_name = course_name_url.replace('_', ' ')
+        lab_name = lab_name_url.replace('_', ' ')
+        context_dict = {'lab_name': lab_name}
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get course and construct URL
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+        
+        # Get lab, lab sections, and simulation elements
+        try:
+            lab = Laboratory.objects.filter(course=course).get(name=lab_name)
+            lab.url = lab_name_url
+            context_dict['lab'] = lab
+            context_dict['student_progress'] = LabProgress.objects.filter(user=user).get(lab=lab)
+            context_dict = get_sections(context_dict, lab)
+            context_dict['simulation_elements'] = SimulationElement.objects.filter(simulation=context_dict['simulation'])
+            
+            # Update number of views if link was clicked
+            if request.method == 'GET':
+                context_dict['student_progress'].simulation_views = context_dict['student_progress'].simulation_views + 1
+                context_dict['student_progress'].save()
+        except Laboratory.DoesNotExist:
+            pass
+        
+        # Send form to view
+        context_dict['image_form'] = UserSimulationImage()
+        
+        # Error message is used to tell user they haven't selected an image to upload
+        context_dict['error_message'] = False
+        
+        ## If request is a POST, try to pull out relevant information.
+        ## Set is_completed to True
+        if request.method == 'POST':
+            form = UserSimulationImage(request.POST, request.FILES)
+            # check if form is valid and image has been selected and is of type PNG
+            if form.is_valid() and request.FILES['image']:
+                context_dict['student_progress'].sim_image = request.FILES['image']
+                # Run image processing on uploaded images and return processed image
+                context_dict['student_progress'].netlist = circuit_recognizer(request.FILES['image'])
+                context_dict['student_progress'].simulation_finished = True
+                context_dict['student_progress'].save()
+            else:
+                # User did not select an image
+                context_dict['error_message'] = True
+        return render(request, 'VLA/simulation.html', context_dict)
+
+# View used for giving test on simulation
+# Questions are multiple choice, with at least two choices needed
+def simulationtest(request, course_name_url, lab_name_url, simulationtest_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get lab name, course name, an simulation test name
+        lab_name = lab_name_url.replace('_', ' ')
+        course_name = course_name_url.replace('_', ' ')
+        context_dict = {'lab_name': lab_name}
+        
+        # Set to true before test is taken, in order to surpress error message
+        # If all questions are not answered will be set to false
+        context_dict['questions_filled'] = True
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get course and construct URL
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+        
+        # Get lab, lab sections, and simulation test questions
+        try:
+            lab = Laboratory.objects.filter(course=course).get(name=lab_name)
+            lab.url = lab_name_url
+            context_dict['lab'] = lab
+            context_dict['student_progress'] = LabProgress.objects.filter(user=user).get(lab=lab)
+            context_dict = get_sections(context_dict, lab)
+            simulationtest_questions = SimulationTestQuestion.objects.filter(simulationtest=context_dict['simulationtest'])
+            num_of_questions = 0
+            for question in simulationtest_questions:
+                num_of_questions = num_of_questions + 1
+                question.given_answer = SimulationQuestionResponse.objects.filter(labprogress=context_dict['student_progress']).get(question_number=num_of_questions)
+            context_dict['simulationtest_questions'] = simulationtest_questions
+            context_dict['simulationtest_elements'] = SimulationTestElement.objects.filter(simulationtest=context_dict['simulationtest'])
+            
+            # Update number of views if link was clicked
+            if request.method == 'GET':
+                context_dict['student_progress'].sim_test_views = context_dict['student_progress'].sim_test_views + 1
+                context_dict['student_progress'].save()
+        except Laboratory.DoesNotExist:
+            pass
+        
+        # If request is a POST, try to pull out relevant information.
+        # Checks to see if each question is answered
+        # if not return questions_filled=False and send to theorytest.html
+        # Assigns each answer to question.given_answer
+        if request.method == 'POST':
+            num_of_questions = 0
+            num_of_correct = 0
+            for question in simulationtest_questions:
+                num_of_questions = num_of_questions + 1
+                name = 'choice' + str(num_of_questions)
+                if name in request.POST:
+                    question.given_answer = SimulationQuestionResponse.objects.filter(labprogress=context_dict['student_progress']).get(question_number=num_of_questions)
+                    question.given_answer.student_response = int(request.POST[name])
+                    question.given_answer.save()
+                    question.is_answered = True
+                    question.save()
+                    if question.given_answer.student_response == question.correct_answer_number:
+                            num_of_correct = num_of_correct + 1
+                else:
+                    question.given_answer = SimulationQuestionResponse.objects.filter(labprogress=context_dict['student_progress']).get(question_number=num_of_questions)
+                    if question.given_answer.student_response:
+                        question.given_answer.save()
+                        question.is_answered = True
+                        question.save()
+                        if question.given_answer.student_response == question.correct_answer_number:
+                            num_of_correct = num_of_correct + 1
+                    else:
+                        question.is_answered = False
+                        question.save()
+                        context_dict['questions_filled'] = False
+                    #context_dict['test_complete'] = False
+                    #return render(request, 'VLA/simulationtest.html', context_dict)
+                
+                    
+            if num_of_correct == num_of_questions:
+                context_dict['student_progress'].sim_test_finished = True
+                
+            # Set just_finished and is_completed to True and save
+            context_dict['simulationtest_questions'] = simulationtest_questions
+            context_dict['student_progress'].save()
+    
+        return render(request, 'VLA/simulationtest.html', context_dict)
+    
+# View for displaying directions for hardware experiment
+# Information is presented in the form of text, images, equations, videos, or tables
+def hardware(request, course_name_url, lab_name_url, hardware_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get course name and lab name
+        course_name = course_name_url.replace('_', ' ')
+        lab_name = lab_name_url.replace('_', ' ')
+        context_dict = {'lab_name': lab_name}
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get course and construct URL
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+        
+        # Get lab, lab sections, and hardware elements
+        try:
+            lab = Laboratory.objects.filter(course=course).get(name=lab_name)
+            lab.url = lab_name_url
+            context_dict['lab'] = lab
+            context_dict['student_progress'] = LabProgress.objects.filter(user=user).get(lab=lab)
+            context_dict = get_sections(context_dict, lab)
+            context_dict['hardware_elements'] = HardwareElement.objects.filter(hardware=context_dict['hardware'])
+            
+            # Update number of views if link was clicked
+            if request.method == 'GET':
+                context_dict['student_progress'].hardware_views = context_dict['student_progress'].hardware_views + 1
+                context_dict['student_progress'].save()
+        except Laboratory.DoesNotExist:
+            pass
+    
+        # If request is a POST, try to pull out relevant information.
+        # Set is_completed to True
+        if request.method == 'POST':
+            context_dict['student_progress'].hardware_finished = True
+            context_dict['student_progress'].save()
+        return render(request, 'VLA/hardware.html', context_dict)
+
+# NEEDS TO BE FINISHED
+# View for displaying forms for user to input hardware results
+# The information entered by the user will added to a generated Word document
+def results(request, course_name_url, lab_name_url, results_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get course name and lab name
+        course_name = course_name_url.replace('_', ' ')
+        lab_name = lab_name_url.replace('_', ' ')
+        context_dict = {'lab_name': lab_name}
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get course and construct URL
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+        
+        # Get lab, lab sections, and hardware elements
+        try:
+            lab = Laboratory.objects.filter(course=course).get(name=lab_name)
+            lab.url = lab_name_url
+            context_dict['lab'] = lab
+            context_dict['student_progress'] = LabProgress.objects.filter(user=user).get(lab=lab)
+            context_dict = get_sections(context_dict, lab)
+            results_questions = ResultsQuestions.objects.filter(results=context_dict['results'])
+            context_dict['results_questions'] = results_questions
+            
+            # Update number of views if link was clicked
+            if request.method == 'GET':
+                context_dict['student_progress'].results_views = context_dict['student_progress'].results_views + 1
+                context_dict['student_progress'].save()
+        except Laboratory.DoesNotExist:
+            pass
+    
+        # If request is a POST, try to pull out relevant information.
+        # Set is_completed to True
+        if request.method == 'POST':
+            context_dict['student_progress'].results_finished = True
+            context_dict['student_progress'].save()
+        return render(request, 'VLA/results.html', context_dict)
+
+# View used for giving test on simulation
+# Questions are multiple choice, with at least two choices needed
+def labtest(request, course_name_url, lab_name_url, labtest_name_url):
+    # Check if user is logged in, if not authenticated, send user to login
+    if not request.user.is_authenticated():
+        return render(request, 'VLA/login.html')
+    else:
+        # Get user and username
+        user = request.user
+        username = request.user.username
+        
+        # Get lab name, course name, an simulation test name
+        lab_name = lab_name_url.replace('_', ' ')
+        course_name = course_name_url.replace('_', ' ')
+        context_dict = {'lab_name': lab_name}
+        
+        # Set to true before test is taken, in order to surpress error message
+        # If all questions are not answered will be set to false
+        context_dict['questions_filled'] = True
+        
+        # Set searched flags to false and get complete question and definition lists
+        context_dict['def_searched'] = False
+        context_dict['def_list'] = Node.objects.all()
+        context_dict['question_searched'] = False
+        context_dict['question_list'] = AnswerWithQuestion.objects.all()
+        
+        # Get course and construct URL
+        try:
+            course = Course.objects.get(name=course_name)
+            course.url = course_name_url
+            context_dict['course'] = course
+        except Course.DoesNotExist:
+            pass
+        
+        # Get lab, lab sections, and simulation test questions
+        try:
+            lab = Laboratory.objects.filter(course=course).get(name=lab_name)
+            lab.url = lab_name_url
+            context_dict['lab'] = lab
+            context_dict['student_progress'] = LabProgress.objects.filter(user=user).get(lab=lab)
+            context_dict = get_sections(context_dict, lab)
+            labtest_questions = LabTestQuestion.objects.filter(labtest=context_dict['labtest'])
+            context_dict['labtest_questions'] = labtest_questions
+            context_dict['labtest_elements'] = LabTestElement.objects.filter(labtest=context_dict['labtest'])
+            
+            # Update number of views if link was clicked
+            if request.method == 'GET':
+                context_dict['student_progress'].lab_test_views = context_dict['student_progress'].lab_test_views + 1
+                context_dict['student_progress'].save()
+        except Laboratory.DoesNotExist:
+            pass
+        
+        # If request is a POST, try to pull out relevant information.
+        # Checks to see if each question is answered
+        # if not return questions_filled=False and send to theorytest.html
+        # Assigns each answer to question.given_answer
+        if request.method == 'POST':
+            num_of_questions = 0
+            num_of_correct = 0
+            for question in labtest_questions:
+                num_of_questions = num_of_questions + 1
+                name = 'choice' + str(num_of_questions)
+                if name in request.POST:
+                    question.given_answer = int(request.POST[name])
+                    question.is_answered = True
+                    question.save()
+                else:
+                    context_dict['questions_filled'] = False
+                    context_dict['test_complete'] = False
+                    return render(request, 'VLA/labtest.html', context_dict)
+                if question.given_answer == question.correct_answer_number:
+                    num_of_correct = num_of_correct + 1
+                    
+            # Calculate test score            
+            context_dict['student_progress'].lab_test_score = num_of_correct/num_of_questions*100
+            
+            # Set just_finished and is_completed to True and save
+            context_dict['just_finished'] = True
+            context_dict['labtest_questions'] = labtest_questions
+            context_dict['student_progress'].lab_test_finished = True
+            context_dict['student_progress'].save()
+    
+        return render(request, 'VLA/labtest.html', context_dict)
+
+
+# Get permissible course list and create URLs
+def get_course_list(user):
+    permissions = CoursePermission.objects.filter(user=user)
+    cour_list = []
+    for permission in permissions:
+        cour_list.append(permission.course)
+
+    for cour in cour_list:
+        cour.url = cour.name.replace(' ', '_')
+    return cour_list
+
+# Get complete lab list for a given course and create URLs
+def get_lab_list(course, user):
+    lab_list = []
+    permissions = LabProgress.objects.filter(user=user)
+    for permission in permissions:
+        if permission.lab.course == course:
+            lab_list.append(permission.lab)
+    
+    for lab in lab_list:
+        lab.url = lab.name.replace(' ', '_')
+        
+    return lab_list
+
+# Get complete section list for a given lab and create URLs
+def get_sections(context_dict, lab):
+    try:
+        theory = Theory.objects.filter(lab=lab).get(lab=lab)
+        theory.url = theory.name.replace(' ', '_')
+        context_dict['theory'] = theory
+    except Theory.DoesNotExist:
+        pass
+    try:
+        theorytest = TheoryTest.objects.filter(lab=lab).get(lab=lab)
+        theorytest.url = theorytest.name.replace(' ', '_')
+        context_dict['theorytest'] = theorytest
+    except TheoryTest.DoesNotExist:
+        pass
+    try:
+        simulation = Simulation.objects.filter(lab=lab).get(lab=lab)
+        simulation.url = simulation.name.replace(' ', '_')
+        context_dict['simulation'] = simulation
+    except Simulation.DoesNotExist:
+        pass    
+    try:
+        simulationtest = SimulationTest.objects.filter(lab=lab).get(lab=lab)
+        simulationtest.url = simulationtest.name.replace(' ', '_')
+        context_dict['simulationtest'] = simulationtest
+    except SimulationTest.DoesNotExist:
+        pass
+    try:
+        hardware = Hardware.objects.filter(lab=lab).get(lab=lab)
+        hardware.url = hardware.name.replace(' ', '_')
+        context_dict['hardware'] = hardware
+    except Hardware.DoesNotExist:
+        pass
+    try:
+        results = Results.objects.filter(lab=lab).get(lab=lab)
+        results.url = results.name.replace(' ', '_')
+        context_dict['results'] = results
+    except Results.DoesNotExist:
+        pass
+    try:
+        labtest = LabTest.objects.filter(lab=lab).get(lab=lab)
+        labtest.url = labtest.name.replace(' ', '_')
+        context_dict['labtest'] = labtest
+    except LabTest.DoesNotExist:
+        pass
+    
+    return context_dict
+
+
+
+# NOT WORKING
+# Incomplete method used for extracting text elements from elements
+# and replacing all keywords with mouseover definitions and links
+def replace_with_definitions(elements):
+    # get all useful definitions
+    topic_list = VocabTopic.objects.filter(def_useful=False)
+    def_list = Node.objects.all().exclude(topic__in=topic_list)
+    
+    # split text into list of words
+    for element in elements:
+        if element.element_type == 'text':
+            words = element.text_input.split()
+            for definition in def_list:
+                if definition.word in words:
+                    words = [w.replace(definition.word, definition.word) for w in words]
+                #words = [word.replace(word, 'aaa')]
+        # join words
+        joined_words = '--'.join(words)
+        element.text_input = joined_words
+    
+    return elements
+
+###
+#def GenerateDocument(request):
+#    
+#    document = Document()
+#    docx_title="TEST_DOCUMENT.docx"
+#    # ---- Cover Letter ----
+#    document.add_picture((r'%s/static/images/my-header.png' % (settings.PROJECT_PATH)), width=Inches(4))
+#    document.add_paragraph()
+#    document.add_paragraph("%s" % date.today().strftime('%B %d, %Y'))
+#
+#    document.add_paragraph('Dear Sir or Madam:')
+#    document.add_paragraph('We are pleased to help you with your widgets.')
+#    document.add_paragraph('Please feel free to contact me for any additional information.')
+#    document.add_paragraph('I look forward to assisting you in this project.')
+#
+#    document.add_paragraph()
+#    document.add_paragraph('Best regards,')
+#    document.add_paragraph('Acme Specialist 1]')
+#    document.add_page_break()
+#
+#    # Prepare document for download        
+#    # -----------------------------
+#    f = StringIO()
+#    document.save(f)
+#    length = f.tell()
+#    f.seek(0)
+#    response = HttpResponse(
+#        f.getvalue(),
+#        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+#    )
+#    response['Content-Disposition'] = 'attachment; filename=' + docx_title
+#    response['Content-Length'] = length
+#    return response
+
+
+# Classes and Methods for image processing of circuit image
+class Component:
+        
+        def set_component(self,Type, term1, term2, index):
+                self.Type = Type
+                self.term1 = term1
+                self.term2 = term2
+                self.node1 = -1
+                self.node2 = -1
+                self.connections = []
+                self.value = 0
+                self.index = index
+                
+        def print_component(self):
+                print "{" + " Type\t\t => " + str(self.Type) + "\t\t}"
+                print "{" + " Term1\t\t => " + str(self.term1) + "\t}"
+                print "{" + " Term2\t\t => " + str(self.term2) + "\t}"
+                print "{" + " Node1\t\t => " + str(self.node1) + "\t\t}"
+                print "{" + " Node2\t\t => " + str(self.node2) + "\t\t}"
+                print "{" + " Value\t\t => " + str(self.value) + "\t\t}"
+                print "{" + " Connections\t => " + str( len(self.connections)) +"\t\t}"
+                print "{" + " Index \t => " + str(self.index) + "\t\t}"
+                print "------------------------------------------"
+                
+        def add_connections(self, adj_comp):
+                if (self.check_duplicate(adj_comp)):
+                    return
+                else: 
+                    self.connections.append(adj_comp.index)
+
+        def check_duplicate(self,adj_comp):
+                    for x in self.connections:
+                          if adj_comp.index == x: return True
+                          else: return False
+
+# Function to separate text from components
+def area_thresholding(thresh):
+        thresh_src = np.zeros((thresh.shape[0], thresh.shape[1],3), np.uint8)
+        thresh_src[:] = (255,255,255)
+        contours,hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        area_thresh = 100
+        for x in range(0,len(contours)):
+                if len(contours[x]) > 100:
+                        cv2.drawContours(thresh_src,contours, x, (0,0,0), 1)
+        cv2.imwrite("Area Thresh.png", thresh_src)
+	return thresh_src
+
+# Function to determine the distance between two components (four terminal points)
+def calculate_distance(comp1pt1, comp1pt2, comp2pt1, comp2pt2):
+        dx11 = comp1pt1[0] - comp2pt1[0]; dx12 = comp1pt1[0] - comp2pt2[0]; 
+        dy11 = comp1pt1[1] - comp2pt1[1]; dy12 = comp1pt1[1] - comp2pt2[1];
+        dx22 = comp1pt2[0] - comp2pt2[0]; dy22 = comp1pt2[1] - comp2pt2[1];
+        dist_pt11 = math.sqrt(math.pow(dx11,2) + math.pow(dy11,2))
+	dist_pt12 = math.sqrt(math.pow(dx12,2) + math.pow(dy12,2))
+        dist_pt22 = math.sqrt(math.pow(dx22,2) + math.pow(dy22,2))
+        return (dist_pt11,dist_pt12, dist_pt22)
+
+# Function to find closest component when connections are lacking
+def check_closest():
+
+	return;
+
+# Function to ensure connected wires have the same node 
+def check_wires():
+
+	return;
+
+# Function to merge small wires into larger ones
+def conjoin_wires(wire_list):
+        initial = len(wire_list)
+        # Iterate through the wire list, looking for any wires within one another
+        for comparator_wire in wire_list:
+                checkx = False; checky = False;
+                cterm1 = comparator_wire.term1
+                cterm2 = comparator_wire.term2
+                if cterm1[0] == cterm2[0]:
+                        checkx = True
+                else: checky = True
+                # Wire under test has differing Y, but same X. 
+                for inner_wire in wire_list:
+                        iterm1 = inner_wire.term1
+                        iterm2 = inner_wire.term2
+                        if checkx:
+                                if inner_wire.index == comparator_wire.index:
+                                        continue
+                                # Check if the x coordinates are close together:
+                                if iterm1[0] - 2 < cterm1[0] and iterm1[0] +2 > cterm1[0] and iterm2[0] - 2 < cterm2[0] and iterm2[0] + 2 > cterm1[0] :
+                                        # Check if the y coordinates are within each other:
+                                        if (cterm1[1] <= iterm1[1] and cterm2[1] >= iterm1[1]):
+                                                comparator_wire.term2 = iterm2
+                                                wire_list.remove(inner_wire)
+                                                break
+                        # Wire under test has differing X, but same Y. 
+                        elif checky:
+                                if inner_wire.index == comparator_wire.index:
+                                        continue
+                                # Check if the Y coordinates are close together:
+                                if iterm1[1] - 2< cterm1[1] and iterm1[1] +2 > cterm1[1] and iterm2[1] -2 < cterm2[1] and iterm2[1] + 2 > cterm2[1]:
+                                        # Check if the X coordinates are within each other:
+                                        if (cterm1[0] <= iterm1[0] and cterm2[0] >= iterm1[0]):
+                                                cterm2 = iterm2
+                                                comparator_wire.term2 = cterm2
+                                                wire_list.remove(inner_wire)
+                                                break
+                        else:
+                                print "Something bad happened"
+                                break
+        net_change = initial-len(wire_list)
+	return net_change
+
+# Function which iterates over matches, and stores them as long as reasonable conditions are met.
+def explore_match(loc,index,comp_list,wire_list,super_list,w,h,Type,x,blank):
+        comp_found = False
+        # Iterate over matches, creating rectangles
+        for pt in zip(*loc[::-1]):
+                dont_draw = False
+                temp_comp = Component()
+                # Set terminal points
+                if w > h   or "ground270" in x and "vsource0" not in x:
+                        term1 = (pt[0],pt[1]+h/2) 
+                        term2 = (pt[0] + w, pt[1] + h/2)
+                else: 
+                        term1 =  (pt[0] + w/2, pt[1]) 
+                        term2 =  (pt[0] + w/2, pt[1] + h)
+                        
+                # Iterate over lists, trying to delete any unnecessary wires
+                if Type == "Wire":
+                        for iter_comp in comp_list:
+                                # If term1[0] (temp_comp X) is between any X and Y, don't draw 
+                                if term2[0] <= iter_comp.term2[0] and term1[0] >= iter_comp.term1[0] and term1[1]  >= iter_comp.term1[1] and term2[1] <= iter_comp.term2[1]:
+                                        dont_draw = True
+                if Type == "Wire":
+                        for iter_wire in wire_list:
+                                # If Both Y are within 2 pix, and starting term within 5 pix, don't draw
+                                if term1[1] - 2 <= iter_wire.term1[1] and term1[1] + 2 >= iter_wire.term1[1] and term1[0] - 5 <= iter_wire.term1[0] and term1[0] + 5 >= iter_wire.term1[0]:
+                                        pass
+                                        #dont_draw = True
+                                # If both X are within 2 pix, and starting term within 5 pix, don't draw
+                                if term1[0] -2 <= iter_wire.term1[0] and term1[0] + 2 >= iter_wire.term1[0] and term1[1] - 5 <= iter_wire.term1[1] and term1[1] + 5 >= iter_wire.term1[1]:
+                                        pass
+                                        #dont_draw = True
+                                
+                                # Iterate over comp list to make sure wire is not inside rect 
+                        for iter_comp in comp_list:
+                                if term1[0] in range(iter_comp.vertex[0]-2, iter_comp.vertex[0] + iter_comp.cols+4) and term1[1] in range(iter_comp.vertex[1]-4, iter_comp.vertex[1] + iter_comp.rows+4):
+                                        if term2[0] in range(iter_comp.vertex[0]-2, iter_comp.vertex[0] + iter_comp.cols+4) and term2[1] in range(iter_comp.vertex[1]-4, iter_comp.vertex[1] + iter_comp.rows+4):
+                                                dont_draw = True
+                        
+                # Check distance in 
+                for comp in super_list:
+                        (pt_11,pt_12, pt22) =  calculate_distance(comp.term1, comp.term2, comp.term1, comp.term2)
+                        if pt_11 == 0 or pt_12==0:
+                                continue
+                        elif pt_11 <= 1.5 or pt_12 <= 1.5:
+                                dont_draw = True
+
+                # Ignore components which have triggered one of the if statements
+                if (dont_draw):
+                        continue
+                                
+                # Add component to the list         
+                temp_comp.set_component(Type,term1,term2,index)
+                       
+                if Type != "Wire":
+                        temp_comp.cols = w; temp_comp.rows = h; temp_comp.vertex = pt
+                        comp_list.append(temp_comp)
+                        print "COMPONENT FOUND: " + temp_comp.Type 
+                        super_list.append(temp_comp)
+                        comp_found = True
+                else: 
+                        wire_list.append(temp_comp)
+                        super_list.append(temp_comp)
+                        comp_found = True
+
+                # Draw Rectangles
+                cv2.rectangle(blank, pt, (pt[0] + w, pt[1] + h), (0,0,255),2)
+
+                # Increment the index of the component
+                index += 1
+        # Closes for loop
+        return comp_found,comp_list,wire_list,super_list,index
+
+# Function to ensure wires are purely straight (x or y coordinates are equal)
+def fix_coordinates(wire_list):
+        for temp_wire in wire_list:
+                dx = abs(temp_wire.term1[0] - temp_wire.term2[0])
+                dy = abs(temp_wire.term1[1] - temp_wire.term2[1])
+                if dx > dy:
+                        temp_wire.term1 = (temp_wire.term1[0],temp_wire.term2[1])
+                else:
+                        temp_wire.term1 = (temp_wire.term2[0],temp_wire.term1[1])
+        return
+
+# Function to move wire terminals nearly outside of a component's space (rectangle)
+def fix_wires(wire_list, comp_list):
+        for iter_comp in comp_list:
+                cterm1 = iter_comp.term1
+                cterm2 = iter_comp.term2
+                for current_wire in wire_list:
+                        wterm1 = current_wire.term1
+                        wterm2 = current_wire.term2
+                        # Check if wire is in same X vicinity:
+                        if cterm1[0] -3  <= wterm1[0] and cterm1[0] + 3 >= wterm1[0]:
+                                # Check if wire is nested inside component in Y direction (2 cases)
+                                if cterm1[1] <= wterm1[1] and cterm2[1] >= wterm1[1]:
+                                        current_wire.term1 = (cterm2[0],cterm2[1] -2 )
+                                        continue
+                                        # Case 2
+                                elif cterm1[1] <= wterm2[1] and cterm2[1] >= wterm2[1]:
+                                        current_wire.term2 = (cterm1[0],cterm1[1] + 2)
+                                        continue
+                                        # Check if wire is in same Y vicinity: 
+                        if cterm1[1] -3 <= wterm1[1] and cterm1[1] + 3 > wterm1[1]:
+                                # Check if wire is nested inside component in X direction (2 cases)
+                                if cterm1[0] <= wterm1[0] and cterm2[0] >= wterm1[0]:
+                                        current_wire.term1 = (cterm2[0] - 2, cterm2[1])
+                                        continue
+                                # Case 2
+                                elif cterm1[0] <= wterm2[0] and cterm2[0] >= wterm2[0]:
+                                        current_wire.term2 = (cterm1[0] + 2, cterm2[1])
+                                        
+	return;
+
+# Function to generate *.cir file for netlist
+def generate_cir(comp_list):
+        num = 0
+        f = open('VLAnetlist.cir', 'w')
+        f.write("* Netlist *\n");
+        for comp in comp_list:
+                if comp.Type == "Gnd": continue
+                elif comp.Type == "Vsrc": comp.Type = "V"
+                elif comp.Type == "Isrc": comp.Type = "I"
+                num += 1
+                f.write(comp.Type + str(num) + " " + str(comp.node1) + " " + str(comp.node2) + " " + str(comp.value) + "\n")
+        f.write(".end")
+        f.close()
+        return
+
+# Function to break up arrays and call other traversal operations
+def intersection_operations(comp_under_test, comp_list, wire_list):
+	# Create individual arrays for each component
+        gnd_array = []; vsrc_array = []; isrc_array = []; res_array = []; ind_array = []; cap_array = []; future_traverses = [];
+	gnd_count = 0; vsrc_count = 0; isrc_count = 0; res_count = 0; ind_count = 0; cap_count = 0; current_node = 0;
+        for comp in comp_list:
+                if comp.Type == "Gnd":
+                        gnd_array.append(comp)
+                        gnd_count += 1
+                elif comp.Type == "Vsrc":
+                        vsrc_array.append(comp)
+                        vsrc_count +=1
+                elif comp.Type == "Isrc":
+                        isrc_array.append(comp)
+                        isrc_count += 1
+                elif comp.Type == "R":
+                        res_array.append(comp)
+                        res_count += 1
+                elif comp.Type == "L":
+                        ind_array.append(comp)
+                        ind_count += 1
+                elif comp.Type == "C":
+                        cap_array.append(comp)
+                        cap_count += 1
+                else: 
+                        print comp.Type + " unable to be sorted"
+                                
+        # Try to conjoin wires:
+        net_change = 1
+        while net_change != 0:
+                net_change = conjoin_wires(wire_list)
+        # After conjoining wires, fix wires so that they won't be inside components
+        fix_wires(wire_list, comp_list)
+        fix_coordinates(wire_list)
+        super_list = comp_list + wire_list
+        # Iterate through components, starting with ground, assigning nodes
+        conditional = True
+        # Iterate through ground
+        for gnd_iter in gnd_array:
+                current_node = 0
+                future_traverses = list_traversal(comp_list, wire_list, future_traverses, gnd_iter, current_node,super_list)
+                while len(future_traverses) > 0:
+                        future_traverses = list_traversal(comp_list,wire_list,future_traverses,future_traverses[0],current_node,super_list)
+                                
+        # Iterate through vsources
+        for vsrc_iter in vsrc_array:
+                if vsrc_iter.node1 != -1 and vsrc_iter.node2 != -1:
+                        continue
+                else:
+                        current_node += 1
+                        future_traverses = list_traversal(comp_list, wire_list, future_traverses, vsrc_iter, current_node,super_list)
+                        while len(future_traverses) > 0:
+                                future_traverses = list_traversal(comp_list,wire_list,future_traverses,future_traverses[0],current_node,super_list)
+        # Iterate through current sources
+        for isrc_iter in isrc_array:
+                if isrc_iter.node1 != -1 and isrc_iter.node2 != -1:
+                        continue
+                else:
+                        current_node += 1
+                        future_traverses = list_traversal(comp_list, wire_list, future_traverses, isrc_iter, current_node,super_list)
+                        while len(future_traverses) > 0:
+                                future_traverses = list_traversal(comp_list,wire_list,future_traverses,future_traverses[0],current_node,super_list)
+        # Iterate through resistors
+        for res_iter in res_array:
+                if res_iter.node1 != -1 and res_iter.node2 != -1:
+                        continue
+                else:
+                        current_node += 1
+                        future_traverses = list_traversal(comp_list, wire_list, future_traverses, res_iter, current_node,super_list)
+                        while len(future_traverses) > 0:
+                                future_traverses = list_traversal(comp_list,wire_list,future_traverses,future_traverses[0],current_node,super_list)
+        # Iterate through inductors
+        for ind_iter in ind_array:
+                if ind_iter.node1 != -1 and ind_iter.node2 != -1:
+                        continue
+                else:
+                        current_node += 1
+                        future_traverses = list_traversal(comp_list, wire_list, future_traverses, ind_iter, current_node,super_list)
+                        while len(future_traverses) > 0:
+                                future_traverses = list_traversal(comp_list,wire_list,future_traverses,future_traverses[0],current_node,super_list)
+        # Iterate through capacitors
+        for cap_iter in cap_array:
+                if cap_iter.node1 != -1 and cap_iter.node2 != -1:
+                        continue
+                else:
+                        current_node += 1
+                        future_traverses = list_traversal(comp_list, wire_list, future_traverses, cap_iter, current_node,super_list)
+                        while len(future_traverses) > 0:
+                                future_traverses = list_traversal(comp_list,wire_list,future_traverses,future_traverses[0],current_node,super_list)
+        
+        net_string = print_netlist(comp_list)
+        print "Net String:"
+        print net_string
+        generate_cir(comp_list)
+	return net_string
+
+# Function to assign nodes to all components
+def list_traversal(comp_list, wire_list, future_traverses, comp_under_test, current_node, super_list):
+        # Pop off current component
+        if len(future_traverses) > 0:
+                future_traverses.pop(0)
+        # If it's ground, its nodes are both 0
+        if comp_under_test.Type == "Gnd":
+                comp_under_test.node1 = 0
+                comp_under_test.node2 = 0
+        # Print comp under test
+        print "*******************NEW ITERATION*******************"
+        comp_under_test.print_component()
+        # Grab terminal points
+        cterm1 = comp_under_test.term1
+        cterm2 = comp_under_test.term2
+        # Iterate through all the components searching for those nearby comp under test
+        for super_comp in super_list:
+                # Skip over if they're the same component
+                if super_comp.index == comp_under_test.index:
+                        continue
+                # Grab terminal points
+                sterm1 = super_comp.term1
+                sterm2 = super_comp.term2
+                # Check if the comp under test and super comp are nested:
+                if (
+                                (((cterm1[0] -5 <= sterm1[0] and cterm2[0] + 5 >= sterm1[0]) or (cterm1[0] -5 <= sterm2[0] and cterm2[0] + 5 >= sterm2[0])) and
+                                ((cterm1[1] -5 <= sterm1[1] and cterm2[1] + 5 >= sterm1[1]) or (cterm1[1] -5 <= sterm2[1] and cterm2[1] + 5 >= sterm2[1]))) or
+                                (((sterm1[0] -5 <= cterm1[0] and sterm2[0] + 5 >= cterm1[0]) or (sterm1[0] -5 <= cterm2[0] and sterm2[0] + 5 >= cterm2[0])) and
+                                ((sterm1[1] -5 <= cterm1[1] and sterm2[1] + 5 >= cterm1[1]) or (sterm1[1] -5 <= cterm2[1] and sterm2[1] + 5 >= cterm2[1])))
+                ):
+                        # Component found nearby!
+                        print "FOUND COMPONENT:" 
+                        super_comp.print_component()
+                        if super_comp.Type == "Wire":
+                                # Add wire to connection list
+                                super_comp.add_connections(comp_under_test)
+                                comp_under_test.add_connections(super_comp)
+                                if super_comp.node1 != -1 and super_comp.node2 != -1:
+                                        continue
+                                # Set nodes of wire to current node
+                                super_comp.node1 = current_node
+                                super_comp.node2 = current_node
+                                super_comp.print_component()
+                                # Add wire to future traversal list
+                                future_traverses.append(super_comp)
+                        else: 
+                                # Calculate distance to figure out which node is closer (important for polarity)
+                                (d11, d12, d22) = calculate_distance(cterm1, cterm2, sterm1, sterm2)
+                                print "d11: " + str(d11) + " d12: " + str(d12)
+                                if d11 == 0 or d12 == 0:
+                                        print " MISS ? "
+                                        super_comp.print_component()
+                                        comp_under_test.print_component()
+                                        print "END MISS"
+                                        continue
+                                elif d11 > d12:
+                                        # Assign to node 2
+                                        if super_comp.node2 == -1:
+                                                super_comp.node2 = current_node 
+                                        # Node 2 already assigned debug statements
+                                        else:
+                                                print " NODE 2 ALREADY ASSIGNED: " 
+                                                super_comp.print_component()
+                                                comp_under_test.print_component()
+                                                print " END OF NODE 2" 
+                                        # Add to connections 
+                                        super_comp.add_connections(comp_under_test)
+                                        comp_under_test.add_connections(super_comp)
+
+                                else:
+                                        # Assign to node 1
+                                        if super_comp.node1 == -1:
+                                                super_comp.node1 = current_node
+                                        # Node 1 is already assigned debug statements
+                                        else:
+                                                print " NODE 1 ALREADY ASSIGNED: "
+                                                super_comp.print_component()
+                                                comp_under_test.print_component()
+                                        # Add to connections
+                                        super_comp.add_connections(comp_under_test)
+                                        comp_under_test.add_connections(super_comp)
+        # Ensure a hanging component doesn't have a nearby solution
+        if len(comp_under_test.connections) < 2 and len(future_traverses) == 0 and comp_under_test.Type == "Wire":
+                # Perform distance calculations on entire super list to determine any nearby matches
+                print "Less than one connection!"
+                min_dist = 1000; breakvar = False; min_comp = None
+                for super_comp in super_list:
+                        if super_comp.index == comp_under_test.index:
+                                continue
+                        for connection in super_comp.connections:
+                                if connection == comp_under_test.index:
+                                        breakvar = True
+                        if breakvar:
+                                continue
+                        (d11, d12, d22) = calculate_distance(comp_under_test.term1, comp_under_test.term2, super_comp.term1, super_comp.term2)
+                        if d11 < d12 and d11 < min_dist and d11< d22: 
+                                min_dist = d11
+                                min_comp = super_comp
+                        elif d12 < d11 and d12 < min_dist and d12 < d22: 
+                                min_dist = d12
+                                min_comp = super_comp
+                        elif d22 < d11 and d22 < d12 and d22 < min_dist:
+                                min_dist = d22
+                                min_comp = super_comp
+                        if min_dist != 1000:
+                                print "Closest comp found has index: " + str(min_comp.index) + " And Type: " + min_comp.Type + " At a distance: " + str(min_dist)
+                if min_dist < 8.0:
+
+                        print "MIN COMPONENT FOUND :" 
+                        min_comp.print_component()
+                        if min_comp.Type == "Wire":
+                                # Add wire to connection list
+                                min_comp.add_connections(comp_under_test)
+                                comp_under_test.add_connections(min_comp)
+                                if min_comp.node1 != -1 and super_comp.node2 != -1:
+                                        print "Comp already found"
+                                        return
+                                # Set nodes of wire to current node
+                                min_comp.node1 = current_node
+                                min_comp.node2 = current_node
+                                # Add wire to future traversal list
+                                future_traverses.append(min_comp)
+                        else: 
+                                # Calculate distance to figure out which node is closer (important for polarity)
+                                if d11 > d12 or d11 > d22:
+                                        # Assign to node 2
+                                        if min_comp.node2 == -1:
+                                                min_comp.node2 = current_node 
+                                        # Node 2 already assigned debug statements
+                                        else:
+                                                print " NODE 2 ALREADY ASSIGNED: " 
+                                                min_comp.print_component()
+                                                comp_under_test.print_component()
+                                                print " END OF NODE 2" 
+                                        # Add to connections 
+                                        min_comp.add_connections(comp_under_test)
+                                        comp_under_test.add_connections(min_comp)
+                                else:
+                                        # Assign to node 1
+                                        if min_comp.node1 == -1:
+                                                min_comp.node1 = current_node
+                                        # Node 1 is already assigned debug statements
+                                        else:
+                                                print " NODE 1 ALREADY ASSIGNED: "
+                                                min_comp.print_component()
+                                                comp_under_test.print_component()
+                                        # Add to connections
+                                        min_comp.add_connections(comp_under_test)
+                                        comp_under_test.add_connections(min_comp)
+	return future_traverses
+
+
+# Function to print netlist
+def print_netlist(comp_list):
+        #print "Type \t | Node 1 | Node 2| Value |"
+        net_string = "<html>\nType \t | Node 1 | Node 2| Value | \n"
+        for x in comp_list:
+               # print x.Type + " \t |" + str(x.node1) + "\t  |" + str(x.node2) + " \t  |" + str(x.value) + "\t  |" 
+                net_string = net_string + x.Type + " \t |" + str(x.node1) + "\t  |" + str(x.node2) + " \t  |" + str(x.value) + "\t  |\n" 
+	net_string = net_string + "</html>"
+        return net_string
+
+# Function to detect components
+def test_template_method(not_black, templates):
+        # Read in RGB img and initialize variables
+        src = cv2.imread('Contours.png',-1)
+        blank = np.zeros((src.shape[0],src.shape[1],3),np.uint8)
+        blank[:] = (255,255,255)
+        index = 0
+        comp_tup = ([])
+        comp_list = []; wire_list = []; super_list = [];
+        #Iterate over all template images
+        for x in templates:
+                # Set Type of component
+                if "ground" in x       : Type = "Gnd"
+                elif "capacitor" in x : Type = "C"
+                elif "inductor" in x   : Type = "L"
+                elif "resistor" in x    : Type = "R"
+                elif "vsource" in x   : Type = "Vsrc"
+                elif "isource" in x    : Type = "Isrc"
+                elif "wire" in x        : Type = "Wire"
+                else: Type = "none"
+                # Apply template matching
+                threshold = 0.9
+                copycat = cv2.cvtColor(src,cv2.COLOR_BGR2GRAY)
+                template = cv2.imread(x, 0)
+                res = cv2.matchTemplate(copycat, template, cv2.TM_CCOEFF_NORMED)
+                loc = np.where (res >= threshold)
+                w,h = template.shape[::-1]
+                loc = np.where( res >= threshold)
+                
+                comp_found,comp_list,wire_list,super_list,index=explore_match(loc,index,comp_list,wire_list,super_list,w,h,Type,x,blank)
+                if (comp_found == False and Type != "Isrc" and Type != "Vsrc"):
+                        loc = np.where( res >= threshold - 0.10)
+                        print "Recalling explore_match on " + x
+                        comp_found,comp_list,wire_list,super_list,index=explore_match(loc,index,comp_list,wire_list,super_list,w,h,Type,x,blank)
+                
+        # Write blank to final result
+        cv2.imwrite('res.png', blank)
+	return (super_list, blank)
+        
+def get_erosion_element():
+    return;
+
+def circuit_recognizer(argv):
+    
+    #Make Template List
+    templates = []
+    templates.append("capacitor0.png")
+        templates.append("capacitor90.png")
+        templates.append("inductor0.PNG")
+        templates.append("inductor90.png")
+        templates.append("inductor180.png")
+        templates.append("inductor270.png")
+        templates.append("vsource0.png")
+        templates.append("vsource90.png")
+        templates.append("vsource180.png")
+        templates.append("vsource270.png")
+        templates.append("isource0.png") 
+        templates.append("isource90.png")
+        templates.append("isource180.png")
+        templates.append("isource270.png")
+        templates.append("resistor0.png")
+        templates.append("resistor90.PNG")
+        templates.append("ground0.png")
+        templates.append("ground90.PNG")
+        templates.append("ground180.PNG")
+        templates.append("ground270.PNG")
+        templates.append("wire0.PNG")
+        templates.append("wire90.PNG")
+        
+        # Create color arrays
+        black = np.array([0,0,0])
+        not_black = np.array([100,100,100])
+        white = np.array([255,255,255])
+        
+        # Read in source
+        source = cv2.imread(argv[1],-1)
+        width,height = source.shape[:2]
+        
+        # Create blank matrix
+        blank = np.zeros((width,height,3), np.uint8) 
+        blank[:] = white
+        cv2.imwrite("blank.png",blank)
+	
+        # Apply thresholding
+        hsv =  cv2.cvtColor(source, cv2.COLOR_BGR2HSV)
+        upper_thresh = np.array([215,215,215])
+        lower_thresh = np.array([0,0,0])
+        thresh = cv2.inRange(hsv, lower_thresh,upper_thresh)
+        cv2.imwrite("inrange.png", thresh)
+
+        # Draw contours onto copycat image
+        copycat = blank.copy()
+        contours,hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(copycat,contours, -1, lower_thresh, 1)
+        cv2.imwrite("Contours.png", copycat)
+	# Apply Template Matching & Area Thresholding
+        super_list = []; comp_list = []; wire_list = []
+        super_list,matched_src = test_template_method(not_black, templates)
+        # Split the lists in to wire and component lists
+	for temp_comp in super_list:
+                if temp_comp.Type == "Wire":
+                        wire_list.append(temp_comp)
+                else:
+                        comp_list.append(temp_comp)
+        # Apply area thresholding to remove text
+        thresh_src = area_thresholding(thresh)
+        final_src = cv2.addWeighted(thresh_src,0.5,matched_src,0.5,0)
+        cv2.imwrite("add weighted.png", final_src)
+	#  Connect Components
+	net_string = intersection_operations(super_list, comp_list, wire_list)
+        # Return html formatted netlist string
+        return net_string

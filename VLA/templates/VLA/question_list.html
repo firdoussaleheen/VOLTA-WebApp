@@ -1,0 +1,28 @@
+<ul class="nav nav-list">
+    {% if question_list %}
+        {% if question_list.other %}
+            {% for question in question_list.other %}
+                other: {{ question }}
+            {% endfor %}
+        {% endif %}
+        {% if question_searched %}
+            {% if question_list.exact_question %}
+                Is this your question?
+                {% for question in question_list.exact_question %}
+                    <li><a href="{% url 'question' question.url %}">{{ question.question }}</a></li>
+                {% endfor %}
+            {% endif %}
+            {% if question_list.possible_questions %}
+                Possible Questions:
+                {% for question in question_list.possible_questions %}
+                    <li><a href="{% url 'question' question.url %}">{{ question.question }}</a></li>
+                {% endfor %}
+            {% endif %}
+            {% if not question_list.exact_question and not question_list.possible_questions %}
+                <li>No questions at present.</li>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        <li>No questions at present.</li>
+   {% endif %}
+</ul>

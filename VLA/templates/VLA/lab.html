@@ -1,0 +1,109 @@
+{% extends 'VLA/base.html' %}
+
+{% block title %}VLA: {{ lab_name }}{% endblock %}
+{% block sidetitle %}{{ lab_name }} Sections{% endblock %}
+
+{% block sidebar %}
+    {% include 'VLA/lab_section_list.html' with labs=labs %}    
+{% endblock %}
+
+
+{% block body_block %}
+<div class="hero-unit">
+    <h1>{{ course.subj }} {{ course.course_number }}: {{ course.name }}</h1>
+    <h2>Lab {{ lab.lab_number }}: {{ lab.name }}</h2>
+    
+    <div class="row-fluid">
+        {% if objectives and equipment %}
+            <div class="span6">
+                <p><b>Objectives:</b>
+                <ul>
+                {% for objective in objectives %}
+                    
+                    <li>{{ objective.objective}}</li>
+                    
+                {% endfor %}
+                </ul>
+            </div>
+            <div class="span6">
+                <p><b>Equipment:</b>
+                <ul>
+                {% for equip in equipment %}
+                    <li>{{ equip.equipment }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% elif objectives %}
+            <p><b>Objectives:</b>
+            <ul>
+            {% for objective in objectives %}
+                <li>{{ objective.objective }}</li>
+            {% endfor %}
+            </ul>
+        {% elif equipment %}
+            <p><b>Equipment:</b>
+            <ul>
+            {% for equip in equipment %}
+                <li>{{ equip.equipment }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    <!--/row-->
+</div>
+<div class="row-fluid">
+    {% if theory %}
+        <div class="span4">
+            <h2>Theory</h2>
+            <p>In this section we present the theory relevant to the assigned lab. If at any time you have a question or need a term defined,
+            please use the "Ask a Question" or "Get a Definition" search options on the left, or go to the Help page.</p>
+            <p><a class="btn" href="{% url 'theory' course.url lab.url theory.url %}">Go to Theory</a></p>
+        </div><!--/span-->
+    {% endif %}
+    {% if theorytest %}
+        <div class="span4">
+            <h2>Theory Test</h2>
+            <p>Here you will be tested on the information presented in the Theory section, in the form
+            of a multiple choice test. The test will not be graded nor is it timed, but you must answer all questions. </p>
+            <p><a class="btn" href="{% url 'theorytest' course.url lab.url theorytest.url %}">Go to Theory Test</a></p>
+        </div><!--/span-->
+    {% endif %}
+    {% if simulation %}
+        <div class="span4">
+            <h2>Simulation</h2>
+            <p>In the Simulation section you will be shown a circuit to simulate. Because VOLTA does not have
+            simulation capabilities, you must use third party simualtion software such as Multisim, pSpice, or
+            <a href="http://www.circuitlab.com" target="new">Circuitlab</a>. Then take a screen shot of your simulated circuit and upload to VOLTA. This will allow
+            us to help you debug any problems you are facing.</p>
+            <p><a class="btn" href="{% url 'simulation' course.url lab.url simulation.url %}">Go to Simulation</a></p>
+        </div><!--/span-->
+    {% endif %}
+</div><!--/row-->
+<div class="row-fluid">
+    {% if simulationtest %}
+        <div class="span4">
+            <h2>Simulation Test</h2>
+            <p>This is a multiple choice test, similar to the Theory Test. You will be asked questions about the circuit
+            you simulated in the Simulation section. Again, this test is not graded nor timed, but all questions must be answered. </p>
+            <p><a class="btn" href="{% url 'simulationtest' course.url lab.url simulationtest.url %}">Go to Simulation Test</a></p>
+        </div><!--/span-->
+    {% endif %}
+    {% if hardware %}
+        <div class="span4">
+            <h2>Hardware</h2>
+            <p>The Hardware section outlines the procedure of moving from simualtion to hardware in the lab. You will be given a
+            circuit, which you then must design in the laboratory. </p>
+            <p><a class="btn" href="{% url 'hardware' course.url lab.url hardware.url %}">Go to Hardware</a></p>
+        </div><!--/span-->
+    {% endif %}
+    {% if results %}
+        <div class="span4">
+            <h2>Results</h2>
+            <p>Finally, you will be asked questions on the circuit you built in the Hardware section. These questions
+            will be graded and must be included in your final laboratory report you submit to the TA. If desired, VOLTA
+            will include the answers given in this section in a formated Word file. </p>
+            <p><a class="btn" href="{% url 'results' course.url lab.url results.url %}">Go to Results</a></p>
+        </div><!--/span-->
+    {% endif %}
+</div><!--/row-->
+{% endblock %}
